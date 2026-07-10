@@ -142,7 +142,7 @@ return baseclass.extend({
 	 * top-level sections become accordion groups holding their second-level
 	 * pages. Levels three and up stay in #tabmenu (see above), matching how
 	 * far bootstrap's dropdown nav descends. */
-	renderSidebarMenu(tree) {
+	renderSidebarMenu(tree, url) {
 		const container = document.querySelector('#sidebar-menu');
 		const children = ui.menu.getChildren(tree);
 		const activeName = L.env.dispatchpath[1];
@@ -164,7 +164,7 @@ return baseclass.extend({
 			/* Leaf entries (e.g. Logout) stay plain links */
 			if (sub.length == 0) {
 				const link = E('a', {
-					'href': L.url(child.name),
+					'href': L.url(url, child.name),
 					'class': 'sidebar__item' + (isActive ? ' sidebar__item--active' : '')
 				}, [ E('span', { 'class': 'sidebar__label' }, [ _(child.title) ]) ]);
 
@@ -184,7 +184,7 @@ return baseclass.extend({
 
 			const submenu = E('div', { 'class': 'sidebar__submenu' },
 				sub.map(s => E('a', {
-					'href': L.url(child.name, s.name),
+					'href': L.url(url, child.name, s.name),
 					'class': 'sidebar__subitem' +
 						((isActive && activeSub === s.name) ? ' sidebar__subitem--active' : '')
 				}, [ _(s.title) ])));
@@ -238,7 +238,7 @@ return baseclass.extend({
 			]));
 
 			if (isActive)
-				this.renderSidebarMenu(child);
+				this.renderSidebarMenu(child, child.name);
 		});
 
 		if (ul.children.length > 1)
