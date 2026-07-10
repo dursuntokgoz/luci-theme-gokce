@@ -955,6 +955,101 @@ label[for] { cursor: pointer; }
 }
 
 /* =====================================================================
+   Modal dialogs (the login screen renders inside one, and so do all of
+   LuCI's confirm/upload/apply dialogs - ui.showModal). Ported from
+   luci-theme-bootstrap and re-themed to match Gökçe's cards.
+   ===================================================================== */
+
+#modal_overlay {
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 900;
+	overflow: auto;
+	background: rgba(9, 14, 26, .6);
+	backdrop-filter: blur(2px);
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity .15s ease-in;
+}
+
+body.modal-overlay-active {
+	overflow: hidden;
+	height: 100vh;
+}
+
+body.modal-overlay-active #modal_overlay {
+	opacity: 1;
+	visibility: visible;
+}
+
+.modal {
+	width: 90%;
+	min-width: 270px;
+	max-width: 600px;
+	min-height: 32px;
+	margin: 5em auto;
+	padding: 24px 26px;
+	background: var(--surface);
+	border: 1px solid var(--border-color-medium);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow-lift);
+}
+
+.modal > * {
+	line-height: normal;
+	margin-bottom: .6em;
+	max-width: 100%;
+}
+
+.modal > h4 {
+	font-size: 17px;
+	font-weight: 700;
+	margin-bottom: 16px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid var(--border-color-medium);
+}
+
+.modal > pre,
+.modal > textarea {
+	white-space: pre-wrap;
+	overflow: auto;
+	width: 100%;
+}
+
+.modal .cbi-section,
+.modal .cbi-map {
+	border: none;
+	box-shadow: none;
+	padding: 0;
+	margin: 0;
+	background: transparent;
+}
+
+.modal > .button-row,
+.modal > .right {
+	display: flex;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 4px;
+}
+
+.modal > .button-row > button:first-of-type { margin-right: auto; }
+
+#modal_overlay > .modal.uci-dialog,
+#modal_overlay > .modal.cbi-modal { max-width: 900px; }
+
+/* Login dialog: full-width prominent Log in button */
+#modal_overlay > .modal.login > button.important {
+	font-size: 115% !important;
+	margin-top: .5em;
+	width: 100%;
+}
+
+/* =====================================================================
    Responsive
    ===================================================================== */
 

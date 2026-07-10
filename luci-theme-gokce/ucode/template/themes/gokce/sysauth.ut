@@ -3,9 +3,10 @@
  Copyright 2026 Dursun Tokgoz
  Licensed to the public under the Apache License 2.0.
 
- Verbatim structure from themes/luci-theme-bootstrap/ucode/template/themes/bootstrap/sysauth.ut
- (LuCI project, Apache-2.0) - the login form is theme-agnostic CBI markup, styled
- entirely via cascade.css, so no structural changes are needed here.
+ Structure from themes/luci-theme-bootstrap/ucode/template/themes/bootstrap/sysauth.ut
+ (LuCI project, Apache-2.0). The login form is theme-agnostic CBI markup styled
+ via cascade.css; the only change is the view name (gokce.sysauth instead of
+ bootstrap.sysauth) since that view JS ships per-theme, not in luci-base.
 -#}
 
 {% include('header', { blank_page: true }) %}
@@ -81,7 +82,7 @@
 	<div class="spinning">{{ _('Loading view…') }}</div>
 	<script>
 		L.require('ui').then(function(ui) {
-			ui.instantiateView('bootstrap.sysauth');
+			ui.instantiateView('gokce.sysauth');
 		});
 	</script>
 </div>
