@@ -932,6 +932,22 @@ label[for] { cursor: pointer; }
 
 .cbi-tab-descr { color: var(--text-color-medium); margin: -8px 0 16px; }
 
+/* Tab panes: ui.tabs (luci-base ui.js) only toggles these data attributes -
+   hiding inactive panes is the theme stylesheet's job (as in bootstrap).
+   Without these rules every pane renders stacked on one page. */
+[data-tab-title] {
+	height: 0;
+	opacity: 0;
+	overflow: hidden;
+}
+
+[data-tab-active="true"] {
+	opacity: 1;
+	height: auto;
+	overflow: visible;
+	transition: opacity .25s ease-in;
+}
+
 /* =====================================================================
    Loading spinner
    ===================================================================== */
