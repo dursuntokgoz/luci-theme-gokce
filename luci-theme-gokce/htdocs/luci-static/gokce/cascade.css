@@ -922,13 +922,16 @@ label[for] { cursor: pointer; }
 
 .tabs > li > a:hover, .cbi-tabmenu > li > a:hover { color: var(--text-color-high); text-decoration: none; }
 
-.tabs > li.active > a, .cbi-tabmenu > li.active > a {
+/* Active tab: #tabmenu nav tabs get class "active", CBI tab menus built by
+   ui.tabs get "cbi-tab" on the active li and "cbi-tab-disabled" on every
+   INACTIVE one - despite the name it just means "not active", those tabs
+   must stay clickable (see initTabGroup/updateTabs in luci-base ui.js). */
+.tabs > li.active > a, .cbi-tabmenu > li.active > a,
+.cbi-tabmenu > li.cbi-tab > a {
 	background: var(--surface);
 	color: var(--primary-color-high);
 	box-shadow: var(--shadow);
 }
-
-.cbi-tab-disabled > a { opacity: var(--disabled-opacity); pointer-events: none; }
 
 .cbi-tab-descr { color: var(--text-color-medium); margin: -8px 0 16px; }
 
