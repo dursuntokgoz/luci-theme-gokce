@@ -38,7 +38,10 @@ no-router-needed showcase and is the source of the README screenshots.
   matrix combo therefore produces a byte-identical package with the SAME
   filename → uploading all of them to a Release collides on the asset name and
   only one survives. The release job publishes ONE canonical build
-  (`openwrt-25.12/x86_64`), renamed to `luci-theme-gokce-<tag>.apk`.
+  (`openwrt-25.12/aarch64_generic`), renamed to `luci-theme-gokce-<tag>.apk`.
+  The CI matrix was trimmed to just that one combo (was 6: {x86_64,
+  aarch64_generic, arm_cortex-a7} × {openwrt-25.12, SNAPSHOT}) because the
+  full matrix multiplied CI time for byte-identical output.
 - **The login screen needs theme-local support.** `sysauth.ut`'s
   `ui.instantiateView('gokce.sysauth')` needs `htdocs/.../view/gokce/sysauth.js`
   (a copy of bootstrap's — it ships per-theme, not in luci-base). The login
@@ -117,10 +120,10 @@ docs/                             # README screenshots: dashboard, settings, log
 
 ## CI / release flow
 
-- `.github/workflows/build.yml`: on push/PR/manual, builds the matrix
-  `arch ∈ {x86_64, aarch64_generic, arm_cortex-a7} × sdk ∈ {openwrt-25.12,
-  SNAPSHOT}` (6 jobs) and uploads each as an artifact. ARM arches are for
-  explicit device coverage even though the package is arch-independent.
+- `.github/workflows/build.yml`: on push/PR/manual, builds ONE combo
+  (`aarch64_generic` / `openwrt-25.12` — matches the BPI-R4 test device) and
+  uploads it as an artifact. The package is arch-independent, so one build
+  fully validates it.
 - **Releasing:** push a `v*` tag. The `release` job (guarded by
   `refs/tags/v`) downloads the canonical artifact, renames it
   `luci-theme-gokce-<tag>.apk`, and attaches it to a GitHub Release.

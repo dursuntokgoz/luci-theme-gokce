@@ -17,11 +17,11 @@ jobs:
       matrix:
         # luci-theme-gokce has LUCI_PKGARCH=all (no compiled code, only
         # templates/CSS/JS), so the resulting .ipk/.apk is identical
-        # regardless of target - these arches are built anyway to get
-        # explicit CI confirmation on x86 and on ARM (32/64-bit) devices,
-        # which is what most home routers/SBCs actually run.
-        arch: [x86_64, aarch64_generic, arm_cortex-a7]
-        sdk: [openwrt-25.12, SNAPSHOT]
+        # regardless of target - one arm64 build (matching the BPI-R4 test
+        # device) is enough; the wider x86/ARM32/SNAPSHOT matrix was dropped
+        # because it multiplied CI time for byte-identical output.
+        arch: [aarch64_generic]
+        sdk: [openwrt-25.12]
 
     steps:
       - uses: actions/checkout@v4
@@ -58,7 +58,7 @@ jobs:
       - name: Download canonical build artifact
         uses: actions/download-artifact@v4
         with:
-          name: luci-theme-gokce-openwrt-25.12-x86_64
+          name: luci-theme-gokce-openwrt-25.12-aarch64_generic
           path: artifacts
 
       - name: Rename assets to the tag name
