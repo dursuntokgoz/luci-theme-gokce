@@ -27,7 +27,7 @@ jobs:
           fetch-depth: 0
 
       - name: Build package
-        uses: openwrt/gh-action-sdk@v1
+        uses: openwrt/gh-action-sdk@v11
         env:
           ARCH: ${{ matrix.arch }}-${{ matrix.sdk }}
           FEEDNAME: luci_theme_gokce
