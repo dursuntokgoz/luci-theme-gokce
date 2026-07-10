@@ -7,13 +7,23 @@ Built for the current ucode-based LuCI (no `luasrc/` Lua templates), targeting
 package (Apache-2.0), with the top dropdown navigation replaced by a
 left sidebar and the CBI form/table/button styling re-themed.
 
+**Dashboard — light / dark**
+
 | Light | Dark |
 |-------|------|
-| ![Gökçe light mode](docs/screenshot-light.png) | ![Gökçe dark mode](docs/screenshot-dark.png) |
+| ![Gökçe dashboard, light mode](docs/screenshot-light.png) | ![Gökçe dashboard, dark mode](docs/screenshot-dark.png) |
+
+**Config page (CBI form) & login screen**
+
+| Config page | Login |
+|-------------|-------|
+| ![Gökçe config page](docs/screenshot-settings.png) | ![Gökçe login screen](docs/screenshot-login.png) |
 
 *Screenshots are from the standalone design demo in [`demo/`](demo/), which
-mirrors the theme's design language and menu structure - open
-`demo/index.html` in any browser to explore it without a router.*
+mirrors the theme's design language, menu structure and page types. Open
+`demo/index.html` in any browser to explore it without a router — the
+sidebar links across the dashboard (`index.html`), a config page
+(`settings.html`) and the login screen (`login.html`).*
 
 ## Features
 

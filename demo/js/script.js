@@ -109,11 +109,22 @@
     });
   });
 
+  /* ---------------- CBI sekmeleri (ayar sayfası) ---------------- */
+  var tabLinks = document.querySelectorAll(".tabs a");
+  tabLinks.forEach(function (tab) {
+    tab.addEventListener("click", function (e) {
+      e.preventDefault();
+      tabLinks.forEach(function (t) { t.classList.remove("active"); });
+      tab.classList.add("active");
+    });
+  });
+
   /* =====================================================================
      Trafik grafiği (Canvas — kütüphanesiz hafif çizim)
      ===================================================================== */
+  // Grafik yalnızca panelde (index.html) var; ayar/login sayfalarında yok.
   var canvas = document.getElementById("traffic-chart");
-  var ctx = canvas.getContext("2d");
+  var ctx = canvas ? canvas.getContext("2d") : null;
 
   var POINTS = 40;          // grafikte tutulan örnek sayısı
   var MAX_MBPS = 120;       // dikey eksen üst sınırı
@@ -272,14 +283,19 @@
   }
 
   /* ---------------- Başlat ---------------- */
-  window.addEventListener("resize", function () {
+  if (canvas) {
+    window.addEventListener("resize", function () {
+      resizeCanvas();
+      drawChart();
+    });
+
     resizeCanvas();
     drawChart();
-  });
 
-  resizeCanvas();
-  drawChart();
+    setInterval(tick, 2000);       // trafik + sistem metrikleri
+  }
 
-  setInterval(tick, 2000);         // trafik + sistem metrikleri
-  setInterval(renderUptime, 1000); // uptime saati
+  if (uptimeEl) {
+    setInterval(renderUptime, 1000); // uptime saati
+  }
 })();

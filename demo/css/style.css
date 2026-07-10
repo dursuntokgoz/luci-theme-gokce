@@ -39,6 +39,7 @@
   --sidebar-width-collapsed: 72px;
   --header-height: 64px;
   --radius: 14px;
+  --radius-sm: 8px;
   --transition: .25s ease;
 }
 
@@ -845,6 +846,281 @@ button { font-family: inherit; }
 .page-footer a:hover { color: var(--c-primary); }
 
 /* =====================================================================
+   LuCI config-page (CBI) örneği — gerçek LuCI'nin ürettiği sınıf adlarının
+   demo eşdeğerleri: .cbi-map / .cbi-section / .cbi-value / .table / .tabs /
+   .cbi-page-actions / .btn / .alert-message. Gerçek temanın cascade.css'i ile
+   aynı görünümü verir, burada demo token'larıyla (--c-*) yazılmıştır.
+   ===================================================================== */
+
+.cbi-map { max-width: 1100px; }
+.cbi-map > h2 { font-size: 22px; font-weight: 800; letter-spacing: -.3px; margin-bottom: 4px; }
+.cbi-map-descr { color: var(--c-text-muted); margin-bottom: 20px; }
+
+.cbi-section {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+
+.cbi-section > h3 {
+  font-size: 15px;
+  font-weight: 700;
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.cbi-section-descr { color: var(--c-text-muted); font-size: 12.5px; margin: -10px 0 16px; }
+
+.cbi-value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 22px;
+  padding: 12px 0;
+  border-top: 1px solid var(--c-border);
+}
+
+.cbi-value:first-of-type { border-top: none; padding-top: 0; }
+
+.cbi-value-title {
+  flex: 0 0 220px;
+  padding-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text);
+  text-align: right;
+}
+
+.cbi-value-field { flex: 1 1 260px; min-width: 0; }
+.cbi-value-field .cbi-input-desc { margin-left: 10px; color: var(--c-text-muted); font-size: 12px; }
+.cbi-value-description { flex: 1 0 100%; margin: 4px 0 0; color: var(--c-text-muted); font-size: 12px; }
+
+/* Form kontrolleri */
+.cbi-input-text,
+.cbi-input-password,
+select,
+textarea {
+  width: 320px;
+  max-width: 100%;
+  height: 38px;
+  padding: 4px 12px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+textarea { height: auto; padding: 10px 12px; font-family: "SF Mono", Consolas, monospace; resize: vertical; }
+
+.cbi-input-text:focus,
+.cbi-input-password:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
+}
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%237c879c'%3E%3Cpath d='M8.6 9l3.4 3.4L15.4 9 17 10.6l-5 5-5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 20px;
+  padding-right: 34px;
+  cursor: pointer;
+}
+
+/* Onay kutusu (LuCI'nin özel görünümlü checkbox'ı) */
+.cbi-checkbox {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  vertical-align: -5px;
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  background: var(--c-surface);
+  position: relative;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.cbi-checkbox:checked { background: var(--c-primary); border-color: var(--c-primary); }
+.cbi-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 6px; top: 2px;
+  width: 6px; height: 11px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Sekmeler (#tabmenu / cbi-tabmenu eşdeğeri) */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 5px;
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+}
+
+.tabs a {
+  display: block;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  color: var(--c-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tabs a:hover { color: var(--c-text); }
+.tabs a.active {
+  background: var(--c-surface);
+  color: var(--c-primary);
+  box-shadow: var(--shadow);
+}
+
+/* CBI tablo bölümü (.table/.tr/.td) — index'teki .table ile uyumlu, ek stiller */
+.cbi-section .table { margin-bottom: 0; }
+
+/* Buton çeşitleri */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 16px;
+  height: 38px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition), color var(--transition);
+}
+
+.btn:hover { border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-primary-soft); }
+
+.cbi-button-save { border-color: var(--c-success); color: var(--c-success); }
+.cbi-button-reset { border-color: var(--c-text-muted); color: var(--c-text-muted); }
+.cbi-button-apply,
+.btn--primary {
+  background: linear-gradient(135deg, var(--c-primary), var(--c-primary-dark));
+  border-color: var(--c-primary-dark);
+  color: #fff;
+}
+.cbi-button-apply:hover,
+.btn--primary:hover { color: #fff; }
+
+/* Sayfa eylem çubuğu (Kaydet / Sıfırla / Kaydet & Uygula) */
+.cbi-page-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px;
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+}
+
+.cbi-page-actions .cbi-button-reset { margin-right: auto; }
+
+/* Uyarı kutuları */
+.alert-message {
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  font-size: 13px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.alert-message.info { background: var(--c-primary-soft); border-color: transparent; color: var(--c-text); }
+.alert-message.warning { background: var(--c-warning-soft); border-color: transparent; color: var(--c-text); }
+.alert-message.success { background: var(--c-success-soft); border-color: transparent; color: var(--c-text); }
+.alert-message.error { background: var(--c-danger-soft); border-color: transparent; color: var(--c-text); }
+.alert-message strong { font-weight: 700; }
+
+/* =====================================================================
+   Modal / Login (ui.showModal(..., 'login') eşdeğeri)
+   ===================================================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 6vh 20px;
+  overflow: auto;
+  background: rgba(9, 14, 26, .6);
+}
+
+.modal {
+  width: 100%;
+  max-width: 440px;
+  padding: 26px 28px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lift);
+}
+
+.modal__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.modal__logo {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--logo-gradient);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(59, 110, 245, .35);
+}
+
+.modal__logo .icon { width: 24px; height: 24px; }
+.modal__title { font-size: 18px; font-weight: 800; }
+.modal__subtitle { font-size: 12.5px; color: var(--c-text-muted); margin-top: 1px; }
+
+.modal h4 {
+  font-size: 16px;
+  font-weight: 700;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.modal .cbi-value-title { flex-basis: 120px; }
+.modal .cbi-value-field { flex: 1; }
+.modal .cbi-input-text,
+.modal .cbi-input-password { width: 100%; }
+
+.modal .cbi-button-apply { width: 100%; margin-top: 10px; height: 42px; font-size: 14px; }
+
+/* =====================================================================
    Responsive
    ===================================================================== */
 @media (max-width: 1280px) {
@@ -883,4 +1159,9 @@ button { font-family: inherit; }
   /* Dar ekranda tablo yatay kaydırılabilir */
   .card__body--flush { overflow-x: auto; }
   .table { min-width: 560px; }
+
+  /* CBI form satırları dikey yığılır */
+  .cbi-value { flex-direction: column; align-items: stretch; gap: 4px; }
+  .cbi-value-title { flex-basis: auto; text-align: left; padding-top: 0; }
+  .cbi-input-text, .cbi-input-password, select { width: 100%; }
 }

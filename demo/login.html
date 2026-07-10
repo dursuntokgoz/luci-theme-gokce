@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yetkilendirme Gerekli — Gökçe Theme Demo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    (function () {
+      var forced = new URLSearchParams(location.search).get("theme");
+      var saved = null;
+      try { saved = localStorage.getItem("theme"); } catch (e) {}
+      var theme = forced || saved ||
+        (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+</head>
+<body>
+
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+    <symbol id="icon-wifi" viewBox="0 0 24 24"><path d="M12 20a1.8 1.8 0 110-3.6 1.8 1.8 0 010 3.6zm-4.2-5.2l1.6 1.6a3.7 3.7 0 015.2 0l1.6-1.6a6 6 0 00-8.4 0zm-3.2-3.2l1.6 1.6a8.2 8.2 0 0111.6 0l1.6-1.6a10.5 10.5 0 00-14.8 0zM1.4 8.4L3 10a12.7 12.7 0 0118 0l1.6-1.6a15 15 0 00-21.2 0z" fill="currentColor"/></symbol>
+  </svg>
+
+  <!-- Gerçek LuCI'de bu, ui.showModal(..., 'login') ile oluşturulan modal'dır -->
+  <div class="modal-overlay">
+    <div class="modal login">
+      <div class="modal__brand">
+        <div class="modal__logo"><svg class="icon"><use href="#icon-wifi"/></svg></div>
+        <div>
+          <div class="modal__title">OpenWrt</div>
+          <div class="modal__subtitle">GL.iNet GL-MT6000 · 192.168.1.1</div>
+        </div>
+      </div>
+
+      <h4>Yetkilendirme Gerekli</h4>
+      <p style="color:var(--c-text-muted);font-size:13px;margin:-6px 0 16px">
+        Lütfen bu cihazı yönetmek için oturum açın.
+      </p>
+
+      <form class="cbi-map" onsubmit="return false">
+        <div class="cbi-value">
+          <label class="cbi-value-title" for="user">Kullanıcı Adı</label>
+          <div class="cbi-value-field">
+            <input class="cbi-input-text" id="user" type="text" value="root" autocomplete="username">
+          </div>
+        </div>
+        <div class="cbi-value">
+          <label class="cbi-value-title" for="pass">Parola</label>
+          <div class="cbi-value-field">
+            <input class="cbi-input-password" id="pass" type="password" value="password" autocomplete="current-password">
+          </div>
+        </div>
+      </form>
+
+      <button class="btn cbi-button-apply">Oturum Aç</button>
+
+      <p style="text-align:center;margin:18px 0 0;font-size:12px">
+        <a href="index.html" style="color:var(--c-text-muted)">← Panele dön (demo)</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Tema değiştirme (yalnızca demo için, sağ üstte) -->
+  <button id="theme-toggle" style="position:fixed;top:16px;right:16px;z-index:1000;width:40px;height:40px;border:none;border-radius:10px;background:var(--c-surface);color:var(--c-text-muted);box-shadow:var(--shadow);cursor:pointer" aria-label="Tema değiştir">☾</button>
+  <script>
+    document.getElementById("theme-toggle").addEventListener("click", function () {
+      var root = document.documentElement;
+      var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      try { localStorage.setItem("theme", next); } catch (e) {}
+      this.textContent = next === "dark" ? "☀" : "☾";
+    });
+  </script>
+</body>
+</html>

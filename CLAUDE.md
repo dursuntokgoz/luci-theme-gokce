@@ -63,7 +63,12 @@ luci-theme-gokce/                 # the actual OpenWrt package (feed subdir)
         ├── menu-gokce.js         # sidebar renderer + toggle/theme/accordion JS
         └── view/gokce/sysauth.js # login modal view (per-theme, not luci-base)
 demo/                             # standalone HTML prototype (mirrors the theme)
-docs/                             # screenshot-light.png / screenshot-dark.png (README)
+│   ├── index.html                #   dashboard (cards + live traffic chart)
+│   ├── settings.html             #   config sub-page (CBI form: tabs/rows/table/page-actions)
+│   ├── login.html                #   pre-auth login modal
+│   ├── css/style.css             #   demo's own stylesheet (--c-* tokens; incl. CBI/modal)
+│   └── js/script.js              #   sidebar/theme/accordion/tabs + chart (all guarded)
+docs/                             # README screenshots: dashboard, settings, login (light+dark)
 .github/workflows/build.yml       # CI: build matrix + tag-triggered release
 ```
 
