@@ -52,6 +52,13 @@ artifact and install it on the router:
 opkg install luci-theme-gokce_*.ipk      # older opkg-based images
 # or
 apk add --allow-untrusted luci-theme-gokce_*.apk   # apk-based images (25.12+)
+# or
+
+apk del --allow-untrusted luci-theme-gokce
+rm -rf /tmp/luci-indexcache /tmp/luci-modulecache
+apk add --allow-untrusted  --no-network  luci-theme-gokce_*.apk
+rm -rf /tmp/luci-indexcache /tmp/luci-modulecache
+
 ```
 
 Then select **Gokce** (or **GokceDark** / **GokceLight**) under
