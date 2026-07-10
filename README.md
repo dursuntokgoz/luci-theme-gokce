@@ -11,6 +11,9 @@ left sidebar and the CBI form/table/button styling re-themed.
 
 - Left sidebar navigation (collapsible to icon-only, off-canvas on mobile),
   built from LuCI's real dynamic admin menu tree - no hardcoded app list.
+  Top-level sections expand as accordion groups showing their second-level
+  pages (Network → Interfaces / Wireless / ...); one group open at a time,
+  the section being viewed starts expanded.
 - Three registered theme entries in *System → System → Language and Style*:
   **Gokce** (follows the browser's OS-level dark/light preference),
   **GokceDark**, **GokceLight** (force one mode).
@@ -69,12 +72,11 @@ luci-theme-gokce/
     └── resources/menu-gokce.js                # sidebar renderer + toggle behavior
 ```
 
-## Known limitations (v1)
+## Known limitations
 
-- Only the top-level admin menu is shown in the sidebar; per-section
-  sub-tabs (e.g. Network → Interfaces/Wireless/Firewall) still render as a
-  horizontal tab bar at the top of the content area, not as a nested
-  sidebar accordion.
+- The sidebar shows two menu levels (sections + their pages); third-level
+  navigation (e.g. tabs within a page) stays as a horizontal tab bar at the
+  top of the content area, same depth as bootstrap's dropdown nav.
 - The sidebar icon set only covers the well-known top-level sections
   (`status`, `system`, `network`, `services`, `vpn`, `firewall`); any other
   installed `luci-app-*` gets a generic dot icon.

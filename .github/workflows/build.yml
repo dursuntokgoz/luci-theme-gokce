@@ -61,6 +61,15 @@ jobs:
           name: luci-theme-gokce-openwrt-25.12-x86_64
           path: artifacts
 
+      - name: Rename assets to the tag name
+        run: |
+          cd artifacts
+          for f in *.apk *.ipk; do
+            [ -e "$f" ] || continue
+            mv "$f" "luci-theme-gokce-${GITHUB_REF_NAME}.${f##*.}"
+          done
+          ls -la
+
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:

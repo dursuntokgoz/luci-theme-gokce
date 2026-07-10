@@ -138,26 +138,86 @@ return baseclass.extend({
 	},
 
 	/* Replaces upstream's renderMainMenu(): instead of a horizontal top-nav
-	 * dropdown, renders the top-level admin sections as the vertical sidebar
-	 * list. Only one level deep - deeper levels stay in #tabmenu (see above). */
+	 * with dropdowns, renders the same two menu levels as a vertical sidebar -
+	 * top-level sections become accordion groups holding their second-level
+	 * pages. Levels three and up stay in #tabmenu (see above), matching how
+	 * far bootstrap's dropdown nav descends. */
 	renderSidebarMenu(tree) {
 		const container = document.querySelector('#sidebar-menu');
 		const children = ui.menu.getChildren(tree);
 		const activeName = L.env.dispatchpath[1];
+		const activeSub = L.env.dispatchpath[2];
 
 		if (!container)
 			return;
 
+		const setOpen = (group, open) => {
+			const submenu = group.querySelector('.sidebar__submenu');
+			group.classList.toggle('sidebar__group--open', open);
+			submenu.style.maxHeight = open ? submenu.scrollHeight + 'px' : '';
+		};
+
 		children.forEach(child => {
 			const isActive = activeName === child.name;
-			const className = 'sidebar__item' + (isActive ? ' sidebar__item--active' : '');
+			const sub = ui.menu.getChildren(child);
 
-			const link = E('a', { 'href': L.url(child.name), 'class': className }, [
-				E('span', { 'class': 'sidebar__label' }, [ _(child.title) ])
-			]);
+			/* Leaf entries (e.g. Logout) stay plain links */
+			if (sub.length == 0) {
+				const link = E('a', {
+					'href': L.url(child.name),
+					'class': 'sidebar__item' + (isActive ? ' sidebar__item--active' : '')
+				}, [ E('span', { 'class': 'sidebar__label' }, [ _(child.title) ]) ]);
 
-			link.insertAdjacentHTML('afterbegin', iconHtml(child.name));
-			container.appendChild(link);
+				link.insertAdjacentHTML('afterbegin', iconHtml(child.name));
+				container.appendChild(link);
+				return;
+			}
+
+			const toggle = E('button', {
+				'type': 'button',
+				'class': 'sidebar__item sidebar__item--toggle' + (isActive ? ' sidebar__item--active' : '')
+			}, [ E('span', { 'class': 'sidebar__label' }, [ _(child.title) ]) ]);
+
+			toggle.insertAdjacentHTML('afterbegin', iconHtml(child.name));
+			toggle.insertAdjacentHTML('beforeend',
+				'<svg class="icon sidebar__chevron"><use href="#gokce-icon-chevron"/></svg>');
+
+			const submenu = E('div', { 'class': 'sidebar__submenu' },
+				sub.map(s => E('a', {
+					'href': L.url(child.name, s.name),
+					'class': 'sidebar__subitem' +
+						((isActive && activeSub === s.name) ? ' sidebar__subitem--active' : '')
+				}, [ _(s.title) ])));
+
+			const group = E('div', { 'class': 'sidebar__group' }, [ toggle, submenu ]);
+
+			toggle.addEventListener('click', () => {
+				const app = document.getElementById('gokce-app');
+
+				/* In icon-only mode, first expand the sidebar so labels and
+				 * the submenu have room, then open the clicked group */
+				if (app && app.classList.contains('app--sidebar-collapsed')) {
+					app.classList.remove('app--sidebar-collapsed');
+					try { localStorage.setItem('gokce-sidebar-collapsed', 'false'); } catch (e) {}
+					setOpen(group, true);
+					return;
+				}
+
+				const willOpen = !group.classList.contains('sidebar__group--open');
+
+				/* Accordion: only one group open at a time */
+				container.querySelectorAll('.sidebar__group--open').forEach(other => {
+					if (other !== group) setOpen(other, false);
+				});
+
+				setOpen(group, willOpen);
+			});
+
+			container.appendChild(group);
+
+			/* The section being viewed starts expanded */
+			if (isActive)
+				setOpen(group, true);
 		});
 	},
 

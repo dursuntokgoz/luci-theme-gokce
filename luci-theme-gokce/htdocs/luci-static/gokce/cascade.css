@@ -275,11 +275,84 @@ hr { border: none; border-top: 1px solid var(--border-color-medium); margin: 18p
 }
 
 .sidebar__icon { width: 20px; height: 20px; flex-shrink: 0; }
-.sidebar__label { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.sidebar__label { flex: 1; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+
+/* Accordion groups (top-level sections holding second-level pages) */
+.sidebar__item--toggle {
+	width: 100%;
+	border: none;
+	background: transparent;
+	font-family: inherit;
+	cursor: pointer;
+}
+
+.sidebar__chevron {
+	width: 16px;
+	height: 16px;
+	margin-left: auto;
+	transition: transform var(--transition);
+}
+
+.sidebar__group--open > .sidebar__item .sidebar__chevron { transform: rotate(180deg); }
+
+.sidebar__group--open > .sidebar__item:not(.sidebar__item--active) {
+	background: var(--background-color-medium);
+	color: var(--text-color-high);
+}
+
+.sidebar__submenu {
+	max-height: 0;
+	overflow: hidden;
+	transition: max-height .3s ease;
+}
+
+.sidebar__subitem {
+	position: relative;
+	display: block;
+	padding: 8px 12px 8px 44px;
+	margin-bottom: 1px;
+	border-radius: var(--radius-sm);
+	color: var(--text-color-medium);
+	font-size: 13px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	transition: background var(--transition), color var(--transition);
+}
+
+.sidebar__subitem::before {
+	content: "";
+	position: absolute;
+	left: 26px;
+	top: 50%;
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: currentColor;
+	opacity: .45;
+	transform: translateY(-50%);
+}
+
+.sidebar__subitem:hover {
+	background: var(--background-color-medium);
+	color: var(--text-color-high);
+	text-decoration: none;
+}
+
+.sidebar__subitem--active,
+.sidebar__subitem--active:hover {
+	background: hsla(var(--border-color-low-hsl), 1);
+	color: var(--primary-color-high);
+	font-weight: 600;
+}
+
+.sidebar__subitem--active::before { opacity: 1; }
 
 .app--sidebar-collapsed .sidebar__brand-text,
+.app--sidebar-collapsed .sidebar__chevron,
 .app--sidebar-collapsed .sidebar__label { display: none; }
 
+.app--sidebar-collapsed .sidebar__submenu { max-height: 0 !important; }
 .app--sidebar-collapsed .sidebar__item { justify-content: center; padding: 12px; }
 .app--sidebar-collapsed .sidebar__brand-link { justify-content: center; }
 .app--sidebar-collapsed .sidebar__item--active::before { left: -12px; }
@@ -898,6 +971,7 @@ label[for] { cursor: pointer; }
 	.app--sidebar-open .overlay { opacity: 1; visibility: visible; }
 
 	.app--sidebar-open .sidebar__brand-text,
+	.app--sidebar-open .sidebar__chevron,
 	.app--sidebar-open .sidebar__label { display: block; }
 
 	.app--sidebar-open .sidebar__item { justify-content: flex-start; padding: 10px 12px; }
