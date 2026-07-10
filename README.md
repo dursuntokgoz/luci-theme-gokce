@@ -7,6 +7,14 @@ Built for the current ucode-based LuCI (no `luasrc/` Lua templates), targeting
 package (Apache-2.0), with the top dropdown navigation replaced by a
 left sidebar and the CBI form/table/button styling re-themed.
 
+| Light | Dark |
+|-------|------|
+| ![Gökçe light mode](docs/screenshot-light.png) | ![Gökçe dark mode](docs/screenshot-dark.png) |
+
+*Screenshots are from the standalone design demo in [`demo/`](demo/), which
+mirrors the theme's design language and menu structure - open
+`demo/index.html` in any browser to explore it without a router.*
+
 ## Features
 
 - Left sidebar navigation (collapsible to icon-only, off-canvas on mobile),

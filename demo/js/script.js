@@ -3,7 +3,6 @@
    - Karanlık / aydınlık tema (localStorage'da saklanır)
    - Sidebar aç/kapat (masaüstü: daralt, mobil: off-canvas)
    - Sidebar açılır alt menüler (akordiyon)
-   - Bildirim dropdown'ı
    - Canvas ile canlı trafik grafiği (degrade dolgulu, demo verisi)
    - CPU/RAM, hız ve uptime değerlerinin simüle güncellenmesi
    ===================================================================== */
@@ -110,21 +109,6 @@
     });
   });
 
-  /* ---------------- Bildirim dropdown ---------------- */
-  var notifDropdown = document.getElementById("notification-dropdown");
-  var notifToggle = document.getElementById("notification-toggle");
-
-  notifToggle.addEventListener("click", function (e) {
-    e.stopPropagation();
-    notifDropdown.classList.toggle("dropdown--open");
-  });
-
-  document.addEventListener("click", function (e) {
-    if (!notifDropdown.contains(e.target)) {
-      notifDropdown.classList.remove("dropdown--open");
-    }
-  });
-
   /* =====================================================================
      Trafik grafiği (Canvas — kütüphanesiz hafif çizim)
      ===================================================================== */
@@ -133,7 +117,7 @@
 
   var POINTS = 40;          // grafikte tutulan örnek sayısı
   var MAX_MBPS = 120;       // dikey eksen üst sınırı
-  var CHART_HEIGHT = 220;
+  var CHART_HEIGHT = 400;
   var downData = [];
   var upData = [];
 
