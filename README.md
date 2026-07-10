@@ -47,19 +47,26 @@ downloadable artifact. Pushing a `v*` tag also attaches the built packages
 to a GitHub Release.
 
 If you do want to build locally against a real OpenWrt SDK/buildroot
-checkout, symlink or clone this repo into `package/` (or add it as a feed)
-and run `make package/luci-theme-gokce/compile V=s`.
+checkout, add this repo as a feed (or symlink `luci-theme-gokce/` into
+`package/`) and run `make package/luci-theme-gokce/compile V=s`.
 
 ## Package layout
 
+The actual OpenWrt/LuCI package lives in the `luci-theme-gokce/` subdirectory
+(not the repo root) - `openwrt/gh-action-sdk` links this whole repo in as a
+feed, and OpenWrt's feed scanner only finds packages one directory level
+down, in a folder named after the package.
+
 ```
-Makefile                                  # OpenWrt/LuCI package definition
-root/etc/uci-defaults/30_luci-theme-gokce # registers the 3 theme entries in /etc/config/luci
-ucode/template/themes/gokce/              # header.ut / footer.ut / sysauth.ut (ucode templates)
-htdocs/luci-static/gokce/                 # cascade.css + logo.svg (the actual theme)
-htdocs/luci-static/gokce-dark/            # @import-only stylesheet (distinct mediaurlbase)
-htdocs/luci-static/gokce-light/           # @import-only stylesheet (distinct mediaurlbase)
-htdocs/luci-static/resources/menu-gokce.js  # sidebar renderer + toggle behavior
+luci-theme-gokce/
+├── Makefile                                  # OpenWrt/LuCI package definition
+├── root/etc/uci-defaults/30_luci-theme-gokce # registers the 3 theme entries in /etc/config/luci
+├── ucode/template/themes/gokce/              # header.ut / footer.ut / sysauth.ut (ucode templates)
+└── htdocs/luci-static/
+    ├── gokce/                                 # cascade.css + logo.svg (the actual theme)
+    ├── gokce-dark/                            # @import-only stylesheet (distinct mediaurlbase)
+    ├── gokce-light/                           # @import-only stylesheet (distinct mediaurlbase)
+    └── resources/menu-gokce.js                # sidebar renderer + toggle behavior
 ```
 
 ## Known limitations (v1)

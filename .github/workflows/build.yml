@@ -16,9 +16,11 @@ jobs:
       fail-fast: false
       matrix:
         # luci-theme-gokce has LUCI_PKGARCH=all (no compiled code, only
-        # templates/CSS/JS), so a single representative arch per SDK branch
-        # is enough to validate the build - no full target matrix needed.
-        arch: [x86_64]
+        # templates/CSS/JS), so the resulting .ipk/.apk is identical
+        # regardless of target - these arches are built anyway to get
+        # explicit CI confirmation on x86 and on ARM (32/64-bit) devices,
+        # which is what most home routers/SBCs actually run.
+        arch: [x86_64, aarch64_generic, arm_cortex-a7]
         sdk: [openwrt-25.12, SNAPSHOT]
 
     steps:
