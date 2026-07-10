@@ -1,0 +1,61 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.sdk }} / ${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # luci-theme-gokce has LUCI_PKGARCH=all (no compiled code, only
+        # templates/CSS/JS), so a single representative arch per SDK branch
+        # is enough to validate the build - no full target matrix needed.
+        arch: [x86_64]
+        sdk: [openwrt-25.12, SNAPSHOT]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build package
+        uses: openwrt/gh-action-sdk@v1
+        env:
+          ARCH: ${{ matrix.arch }}-${{ matrix.sdk }}
+          FEEDNAME: luci_theme_gokce
+          PACKAGES: luci-theme-gokce
+          NO_REFRESH_CHECK: true
+          V: s
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: luci-theme-gokce-${{ matrix.sdk }}-${{ matrix.arch }}
+          path: |
+            bin/packages/${{ matrix.arch }}/luci_theme_gokce/*.ipk
+            bin/packages/${{ matrix.arch }}/luci_theme_gokce/*.apk
+          if-no-files-found: warn
+
+  release:
+    name: Publish release assets
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*.*pk

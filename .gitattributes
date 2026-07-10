@@ -1,0 +1,6 @@
+* text=auto eol=lf
+
+*.svg -text
+*.png -text
+*.ipk -text
+*.apk -text

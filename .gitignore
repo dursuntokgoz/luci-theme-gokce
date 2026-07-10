@@ -1,0 +1,7 @@
+bin/
+build/
+tmp/
+.ccache/
+*.ipk
+*.apk
+.claude/
