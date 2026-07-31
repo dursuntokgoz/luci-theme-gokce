@@ -38,6 +38,15 @@ sidebar links across the dashboard (`index.html`), a config page
 - A quick dark/light toggle button in the header (only shown when the
   **Gokce**/Auto theme is active) that overrides the OS preference for the
   current browser via `localStorage`, no page reload or re-login needed.
+- An **appearance panel** (palette button in the header) to personalize the
+  UI, all persisted per-browser and applied before first paint (no flash):
+  - **Theme mode** — Auto (follow OS) / Light / Dark, kept in sync with the
+    quick toggle.
+  - **Accent color** — 7 presets (blue, indigo, teal, green, amber, rose,
+    violet), each tuned for both light and dark mode.
+  - **Density** — Comfortable / Compact, tightening spacing for dense pages.
+- Respects `prefers-reduced-motion`; ships a `.gokce-skeleton` shimmer
+  utility for loading placeholders.
 - Card-styled config sections, restyled buttons/forms/tables/tabs/alerts
   across all of LuCI's CBI-generated pages, not just a single dashboard view.
 - No build step, no external fonts/CDNs/JS frameworks - plain CSS +

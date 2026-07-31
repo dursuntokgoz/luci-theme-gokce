@@ -19,15 +19,58 @@ function iconHtml(name) {
 	return '<svg class="icon sidebar__icon"><use href="#gokce-icon-' + id + '"/></svg>';
 }
 
-function setDarkMode(isDark) {
-	document.documentElement.setAttribute('data-darkmode', isDark ? 'true' : 'false');
-	try { localStorage.setItem('gokce-darkmode', isDark ? 'true' : 'false'); } catch (e) {}
+var ROOT = document.documentElement;
+
+function store(key, val) {
+	try {
+		if (val === null) localStorage.removeItem(key);
+		else localStorage.setItem(key, val);
+	} catch (e) {}
+}
+
+function load(key) {
+	try { return localStorage.getItem(key); } catch (e) { return null; }
+}
+
+function prefersDark() {
+	return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+/* Theme mode: 'auto' follows the OS (no stored override), 'light'/'dark'
+   force it. The header pre-paint script reads the same key on next load. */
+function currentMode() {
+	var v = load('gokce-darkmode');
+	return v === null ? 'auto' : (v === 'true' ? 'dark' : 'light');
+}
+
+function applyMode(mode) {
+	if (mode === 'auto') {
+		store('gokce-darkmode', null);
+		ROOT.setAttribute('data-darkmode', prefersDark() ? 'true' : 'false');
+	} else {
+		var isDark = mode === 'dark';
+		store('gokce-darkmode', isDark ? 'true' : 'false');
+		ROOT.setAttribute('data-darkmode', isDark ? 'true' : 'false');
+	}
+}
+
+function applyAccent(accent) {
+	if (accent) ROOT.setAttribute('data-accent', accent);
+	else ROOT.removeAttribute('data-accent');
+	store('gokce-accent', accent || null);
+}
+
+function applyDensity(density) {
+	if (density && density !== 'comfortable') ROOT.setAttribute('data-density', density);
+	else ROOT.removeAttribute('data-density');
+	store('gokce-density', (density && density !== 'comfortable') ? density : null);
 }
 
 return baseclass.extend({
 	__init__() {
 		this.initSidebarToggle();
 		this.initThemeToggle();
+		this.initAppearance();
 
 		ui.menu.load().then((tree) => this.render(tree));
 	},
@@ -76,14 +119,101 @@ return baseclass.extend({
 	},
 
 	initThemeToggle() {
+		var self = this;
 		var toggle = document.getElementById('gokce-theme-toggle');
 
 		if (!toggle)
 			return;
 
+		/* Quick sun/moon toggle: flip to the opposite explicit mode and keep
+		   the appearance panel's segmented control in sync. */
 		toggle.addEventListener('click', function () {
-			var isDark = document.documentElement.getAttribute('data-darkmode') === 'true';
-			setDarkMode(!isDark);
+			var isDark = ROOT.getAttribute('data-darkmode') === 'true';
+			applyMode(isDark ? 'light' : 'dark');
+			self.syncAppearance();
+		});
+	},
+
+	/* Appearance panel: theme mode / accent color / density, all persisted.
+	   Everything degrades gracefully - if the panel markup is absent (older
+	   cached header), the quick toggle above still works. */
+	initAppearance() {
+		var self = this;
+		var wrap = document.getElementById('gokce-appearance');
+		var toggle = document.getElementById('gokce-appearance-toggle');
+		var panel = document.getElementById('gokce-appearance-panel');
+
+		if (!wrap || !toggle || !panel)
+			return;
+
+		function openPanel() {
+			panel.hidden = false;
+			toggle.setAttribute('aria-expanded', 'true');
+			self.syncAppearance();
+			document.addEventListener('click', onOutside, true);
+			document.addEventListener('keydown', onKey);
+		}
+
+		function closePanel() {
+			panel.hidden = true;
+			toggle.setAttribute('aria-expanded', 'false');
+			document.removeEventListener('click', onOutside, true);
+			document.removeEventListener('keydown', onKey);
+		}
+
+		function onOutside(ev) {
+			if (!wrap.contains(ev.target)) closePanel();
+		}
+
+		function onKey(ev) {
+			if (ev.key === 'Escape') { closePanel(); toggle.focus(); }
+		}
+
+		toggle.addEventListener('click', function (ev) {
+			ev.stopPropagation();
+			if (panel.hidden) openPanel();
+			else closePanel();
+		});
+
+		var modeSeg = document.getElementById('gokce-mode-seg');
+		if (modeSeg) modeSeg.addEventListener('click', function (ev) {
+			var btn = ev.target.closest('[data-mode]');
+			if (!btn) return;
+			applyMode(btn.getAttribute('data-mode'));
+			self.syncAppearance();
+		});
+
+		var accentList = document.getElementById('gokce-accent-list');
+		if (accentList) accentList.addEventListener('click', function (ev) {
+			var btn = ev.target.closest('[data-accent]');
+			if (!btn) return;
+			applyAccent(btn.getAttribute('data-accent'));
+			self.syncAppearance();
+		});
+
+		var densitySeg = document.getElementById('gokce-density-seg');
+		if (densitySeg) densitySeg.addEventListener('click', function (ev) {
+			var btn = ev.target.closest('[data-density]');
+			if (!btn) return;
+			applyDensity(btn.getAttribute('data-density'));
+			self.syncAppearance();
+		});
+	},
+
+	/* Reflect the current state onto the panel controls (active markers). */
+	syncAppearance() {
+		var mode = currentMode();
+		var accent = load('gokce-accent') || 'blue';
+		var density = load('gokce-density') || 'comfortable';
+
+		document.querySelectorAll('#gokce-mode-seg [data-mode]').forEach(function (b) {
+			b.classList.toggle('is-active', b.getAttribute('data-mode') === mode);
+		});
+		document.querySelectorAll('#gokce-accent-list [data-accent]').forEach(function (b) {
+			b.classList.toggle('is-active', b.getAttribute('data-accent') === accent);
+		});
+		document.querySelectorAll('#gokce-density-seg [data-density]').forEach(function (b) {
+			b.classList.toggle('is-active', b.getAttribute('data-density') === density);
 		});
 	},
 

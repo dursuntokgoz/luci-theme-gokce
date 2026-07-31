@@ -22,33 +22,39 @@
 	<head>
 		<meta charset="utf-8">
 		<title>{{ striptags(`${boardinfo.hostname ?? '?'}${dispatched?.title ? ` | ${_(dispatched.title)}` : ''}`) }}</title>
-		{% if (!darkpref): %}
-			<script>
-				(function () {
-					var root = document.documentElement;
-					var STORE_KEY = 'gokce-darkmode';
-					var stored = null;
+		<script>
+			/* Pre-paint appearance: apply saved dark-mode / accent / density
+			   before the stylesheet loads so there is no flash of unstyled or
+			   wrong-themed content (FOUC). Guarded try/catch: private mode or
+			   disabled storage must never break rendering. */
+			(function () {
+				var root = document.documentElement;
+				var forcedDark = {{ darkpref !== null ? (darkpref === 'true' ? 'true' : 'false') : 'null' }};
 
-					try { stored = localStorage.getItem(STORE_KEY); } catch (e) {}
+				function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 
-					function apply(isDark) {
-						root.setAttribute('data-darkmode', isDark ? 'true' : 'false');
-					}
-
+				/* Dark mode: forced by GokceDark/GokceLight, else stored override, else OS pref */
+				if (forcedDark === null) {
+					var stored = get('gokce-darkmode');
 					if (stored !== null) {
-						apply(stored === 'true');
+						root.setAttribute('data-darkmode', stored === 'true' ? 'true' : 'false');
 					} else {
-						var mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-						apply(mediaQuery.matches);
-						mediaQuery.addEventListener('change', function (e) {
-							var override = null;
-							try { override = localStorage.getItem(STORE_KEY); } catch (e2) {}
-							if (override === null) apply(e.matches);
+						var mq = window.matchMedia('(prefers-color-scheme: dark)');
+						root.setAttribute('data-darkmode', mq.matches ? 'true' : 'false');
+						mq.addEventListener('change', function (e) {
+							if (get('gokce-darkmode') === null)
+								root.setAttribute('data-darkmode', e.matches ? 'true' : 'false');
 						});
 					}
-				})();
-			</script>
-		{% endif %}
+				}
+
+				var accent = get('gokce-accent');
+				if (accent) root.setAttribute('data-accent', accent);
+
+				var density = get('gokce-density');
+				if (density) root.setAttribute('data-density', density);
+			})();
+		</script>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="darkreader-lock">
 		<link rel="stylesheet" href="{{ media }}/cascade.css">
@@ -76,6 +82,9 @@
 			<symbol id="gokce-icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="currentColor"/><path d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
 			<symbol id="gokce-icon-moon" viewBox="0 0 24 24"><path d="M20.7 14.9A8.8 8.8 0 019.1 3.3 9 9 0 1020.7 15z" fill="currentColor"/></symbol>
 			<symbol id="gokce-icon-chevron" viewBox="0 0 24 24"><path d="M8.6 9l3.4 3.4L15.4 9 17 10.6l-5 5-5-5L8.6 9z" fill="currentColor"/></symbol>
+			<symbol id="gokce-icon-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 000 18c.8 0 1.5-.7 1.5-1.5 0-.4-.2-.8-.4-1-.3-.3-.4-.6-.4-1 0-.8.7-1.5 1.5-1.5H15a6 6 0 006-6c0-3.9-4-7-9-7zm-5.5 9a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm3-4a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm5 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm3.5 4a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" fill="currentColor"/></symbol>
+			<symbol id="gokce-icon-check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2l5 5 11-11-1.5-1.5z" fill="currentColor"/></symbol>
+			<symbol id="gokce-icon-auto" viewBox="0 0 24 24"><path d="M12 3a9 9 0 000 18V3z" fill="currentColor"/><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
 		</svg>
 
 		{% if (!blank_page): %}
@@ -108,6 +117,50 @@
 							<svg class="icon header__theme-icon--dark"><use href="#gokce-icon-sun"/></svg>
 						</button>
 						{% endif %}
+
+						<div class="appearance" id="gokce-appearance">
+							<button class="header__btn" id="gokce-appearance-toggle" type="button"
+								aria-haspopup="true" aria-expanded="false" aria-label="{{ _('Appearance') }}">
+								<svg class="icon"><use href="#gokce-icon-palette"/></svg>
+							</button>
+
+							<div class="appearance__panel" id="gokce-appearance-panel" role="dialog" aria-label="{{ _('Appearance') }}" hidden>
+								{% if (!darkpref): %}
+								<div class="appearance__group">
+									<span class="appearance__label">{{ _('Theme') }}</span>
+									<div class="appearance__seg" id="gokce-mode-seg" role="group">
+										<button type="button" class="appearance__seg-btn" data-mode="auto">
+											<svg class="icon"><use href="#gokce-icon-auto"/></svg>{{ _('Auto') }}</button>
+										<button type="button" class="appearance__seg-btn" data-mode="light">
+											<svg class="icon"><use href="#gokce-icon-sun"/></svg>{{ _('Light') }}</button>
+										<button type="button" class="appearance__seg-btn" data-mode="dark">
+											<svg class="icon"><use href="#gokce-icon-moon"/></svg>{{ _('Dark') }}</button>
+									</div>
+								</div>
+								{% endif %}
+
+								<div class="appearance__group">
+									<span class="appearance__label">{{ _('Accent') }}</span>
+									<div class="appearance__accents" id="gokce-accent-list" role="group">
+										<button type="button" class="appearance__accent" data-accent="blue"   style="--dot:#3b6ef5" aria-label="{{ _('Blue') }}"><svg class="icon"><use href="#gokce-icon-check"/></svg></button>
+										<button type="button" class="appearance__accent" data-accent="indigo" style="--dot:#6366f1" aria-label="{{ _('Indigo') }}"><svg class="icon"><use href="#gokce-icon-check"/></svg></button>
+										<button type="button" class="appearance__accent" data-accent="teal"   style="--dot:#0ea5a4" aria-label="{{ _('Teal') }}"><svg class="icon"><use href="#gokce-icon-check"/></svg></button>
+										<button type="button" class="appearance__accent" data-accent="green"  style="--dot:#22a35e" aria-label="{{ _('Green') }}"><svg class="icon"><use href="#gokce-icon-check"/></svg></button>
+										<button type="button" class="appearance__accent" data-accent="amber"  style="--dot:#f59e0b" aria-label="{{ _('Amber') }}"><svg class="icon"><use href="#gokce-icon-check"/></svg></button>
+										<button type="button" class="appearance__accent" data-accent="rose"   style="--dot:#f43f5e" aria-label="{{ _('Rose') }}"><svg class="icon"><use href="#gokce-icon-check"/></svg></button>
+										<button type="button" class="appearance__accent" data-accent="violet" style="--dot:#a855f7" aria-label="{{ _('Violet') }}"><svg class="icon"><use href="#gokce-icon-check"/></svg></button>
+									</div>
+								</div>
+
+								<div class="appearance__group">
+									<span class="appearance__label">{{ _('Density') }}</span>
+									<div class="appearance__seg" id="gokce-density-seg" role="group">
+										<button type="button" class="appearance__seg-btn" data-density="comfortable">{{ _('Comfortable') }}</button>
+										<button type="button" class="appearance__seg-btn" data-density="compact">{{ _('Compact') }}</button>
+									</div>
+								</div>
+							</div>
+						</div>
 					</div>
 				</header>
 

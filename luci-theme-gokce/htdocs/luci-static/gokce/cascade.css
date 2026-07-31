@@ -122,6 +122,33 @@
 }
 
 /* =====================================================================
+   Accent presets (data-accent on <html>). Blue is the :root default above;
+   these override the primary trio + focus ring. Each has a light value and
+   a slightly lighter dark-mode value so contrast holds in both themes.
+   ===================================================================== */
+
+:root[data-accent="indigo"] { --primary-color-high:#6366f1; --primary-color-medium:#4f46e5; --primary-color-low:#3730a3; --focus-color-rgb:99,102,241; }
+:root[data-accent="teal"]   { --primary-color-high:#0ea5a4; --primary-color-medium:#0d8f8e; --primary-color-low:#0b6f6e; --focus-color-rgb:14,165,164; }
+:root[data-accent="green"]  { --primary-color-high:#22a35e; --primary-color-medium:#1c8c50; --primary-color-low:#15703f; --focus-color-rgb:34,163,94; }
+:root[data-accent="amber"]  { --primary-color-high:#f59e0b; --primary-color-medium:#d98908; --primary-color-low:#b06d06; --focus-color-rgb:245,158,11; }
+:root[data-accent="rose"]   { --primary-color-high:#f43f5e; --primary-color-medium:#d92e4c; --primary-color-low:#b3213c; --focus-color-rgb:244,63,94; }
+:root[data-accent="violet"] { --primary-color-high:#a855f7; --primary-color-medium:#9032e0; --primary-color-low:#7423b8; --focus-color-rgb:168,85,247; }
+
+:root[data-darkmode="true"][data-accent="indigo"] { --primary-color-high:#818cf8; --primary-color-medium:#4f46e5; --primary-color-low:#3730a3; }
+:root[data-darkmode="true"][data-accent="teal"]   { --primary-color-high:#2dd4bf; --primary-color-medium:#0d8f8e; --primary-color-low:#0b6f6e; }
+:root[data-darkmode="true"][data-accent="green"]  { --primary-color-high:#34c073; --primary-color-medium:#1c8c50; --primary-color-low:#15703f; }
+:root[data-darkmode="true"][data-accent="amber"]  { --primary-color-high:#fbbf24; --primary-color-medium:#d98908; --primary-color-low:#b06d06; }
+:root[data-darkmode="true"][data-accent="rose"]   { --primary-color-high:#fb7185; --primary-color-medium:#d92e4c; --primary-color-low:#b3213c; }
+:root[data-darkmode="true"][data-accent="violet"] { --primary-color-high:#c084fc; --primary-color-medium:#9032e0; --primary-color-low:#7423b8; }
+
+/* Density: compact tightens the spacing/height tokens the layout reads from. */
+:root[data-density="compact"] {
+	--header-height: 52px;
+	--radius: 10px;
+	--radius-sm: 6px;
+}
+
+/* =====================================================================
    Reset / base
    ===================================================================== */
 
@@ -420,6 +447,96 @@ hr { border: none; border-top: 1px solid var(--border-color-medium); margin: 18p
 :root[data-darkmode="true"] .header__theme-icon--dark { display: block; }
 
 .header__indicators { display: flex; align-items: center; gap: 8px; }
+
+/* ---- Appearance panel (theme mode / accent / density) ---- */
+.appearance { position: relative; }
+
+.appearance__panel {
+	position: absolute;
+	top: calc(100% + 8px);
+	right: 0;
+	z-index: 200;
+	width: 260px;
+	padding: 16px;
+	background: var(--surface);
+	border: 1px solid var(--border-color-medium);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow-lift);
+}
+
+.appearance__panel[hidden] { display: none; }
+
+.appearance__group + .appearance__group { margin-top: 16px; }
+
+.appearance__label {
+	display: block;
+	margin-bottom: 8px;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: .5px;
+	color: var(--text-color-medium);
+}
+
+.appearance__seg {
+	display: flex;
+	gap: 4px;
+	padding: 4px;
+	background: var(--background-color-medium);
+	border-radius: var(--radius-sm);
+}
+
+.appearance__seg-btn {
+	flex: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	padding: 7px 6px;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-color-medium);
+	font-family: inherit;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background var(--transition), color var(--transition);
+}
+
+.appearance__seg-btn .icon { width: 15px; height: 15px; }
+.appearance__seg-btn:hover { color: var(--text-color-high); }
+
+.appearance__seg-btn.is-active {
+	background: var(--surface);
+	color: var(--primary-color-high);
+	box-shadow: var(--shadow);
+}
+
+.appearance__accents {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.appearance__accent {
+	width: 30px;
+	height: 30px;
+	display: inline-grid;
+	place-items: center;
+	padding: 0;
+	border: 2px solid transparent;
+	border-radius: 50%;
+	background: var(--dot);
+	color: #fff;
+	cursor: pointer;
+	transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.appearance__accent .icon { width: 16px; height: 16px; opacity: 0; transition: opacity var(--transition); }
+.appearance__accent:hover { transform: scale(1.1); }
+.appearance__accent.is-active { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--dot); }
+.appearance__accent.is-active .icon { opacity: 1; }
 
 /* =====================================================================
    Content area
@@ -1238,6 +1355,62 @@ body.modal-overlay-active #modal_overlay {
 	font-size: 115% !important;
 	margin-top: .5em;
 	width: 100%;
+}
+
+/* =====================================================================
+   Compact density: tighten the fixed paddings/margins the token overrides
+   above don't reach (cards, rows, tables, tabs). Opt-in via data-density.
+   ===================================================================== */
+
+:root[data-density="compact"] body { font-size: 12.5px; }
+:root[data-density="compact"] .container { padding: 16px; }
+:root[data-density="compact"] .cbi-section { padding: 14px 16px; margin-bottom: 14px; }
+:root[data-density="compact"] .cbi-value { margin-bottom: 10px; }
+:root[data-density="compact"] .cbi-value-title { padding-top: 5px; }
+:root[data-density="compact"] .table .th,
+:root[data-density="compact"] .table .td { padding: 7px 10px; }
+:root[data-density="compact"] .sidebar__item { padding: 8px 12px; }
+:root[data-density="compact"] .sidebar__subitem { padding: 6px 12px 6px 44px; }
+:root[data-density="compact"] .tabs > li > a,
+:root[data-density="compact"] .cbi-tabmenu > li > a { padding: 6px 12px; }
+:root[data-density="compact"] .cbi-page-actions,
+:root[data-density="compact"] .actions { padding: 10px 14px; }
+
+/* =====================================================================
+   Skeleton loading utility (.gokce-skeleton on a placeholder block)
+   ===================================================================== */
+
+.gokce-skeleton {
+	position: relative;
+	overflow: hidden;
+	min-height: 1em;
+	border-radius: var(--radius-sm);
+	background: var(--background-color-medium);
+}
+
+.gokce-skeleton::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	transform: translateX(-100%);
+	background: linear-gradient(90deg, transparent, hsla(var(--border-color-low-hsl), .6), transparent);
+	animation: gokce-shimmer 1.3s infinite;
+}
+
+@keyframes gokce-shimmer { 100% { transform: translateX(100%); } }
+
+/* =====================================================================
+   Reduced motion: honor the OS/user preference - kill non-essential
+   transitions and animations (keeps opacity fades subtle, drops movement).
+   ===================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after {
+		animation-duration: .001ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: .001ms !important;
+		scroll-behavior: auto !important;
+	}
 }
 
 /* =====================================================================
