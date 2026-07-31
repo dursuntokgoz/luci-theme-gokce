@@ -1,9 +1,9 @@
 {#
- Copyright 2026 Dursun Tokgoz
- Licensed to the public under the Apache License 2.0.
+ Copyright 2026 Dursun Tokgöz - https://www.dursuntokgoz.com.tr/
+ Licensed under the Gökçe Theme License v1.0 (see LICENSE at the repo root).
 
  Structurally based on themes/luci-theme-bootstrap/ucode/template/themes/bootstrap/header.ut
- (LuCI project, Apache-2.0) - replaces the top dropdown nav with a collapsible
+ (LuCI project, Apache-2.0; see NOTICE) - replaces the top dropdown nav with a collapsible
  left sidebar; #tabmenu / #modemenu / #indicators keep their original meaning
  and DOM ids so core and third-party luci-app-* JS keeps working unmodified.
 -#}

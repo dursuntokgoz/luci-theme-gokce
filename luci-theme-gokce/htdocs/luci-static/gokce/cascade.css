@@ -1,7 +1,8 @@
 /*!
  * LuCI Gökçe Theme
- * Copyright 2026 Dursun Tokgoz
- * Licensed under the Apache License, Version 2.0
+ * Copyright 2026 Dursun Tokgöz - https://www.dursuntokgoz.com.tr/
+ * Licensed under the Gökçe Theme License v1.0 (see LICENSE at the repo root).
+ * Portions derived from luci-theme-bootstrap remain Apache-2.0 (see NOTICE).
  *
  * Class names for CBI/table/tab/alert/form elements below (.cbi-value,
  * .cbi-value-title, .cbi-value-field, .cbi-value-description, .table/.tr/.td,
@@ -657,6 +658,86 @@ input[type="radio"]:checked::after {
 
 label[for] { cursor: pointer; }
 
+/* LuCI wraps each checkbox/radio in a .cbi-checkbox / .cbi-radio element
+   (real <input> stays inside, so the native control styling above applies);
+   these rules just keep the wrapper aligned with the rest of the field. */
+.cbi-value-field > .cbi-checkbox,
+.cbi-value-field > div > .cbi-radio {
+	height: 34px;
+	display: inline-flex;
+	align-items: center;
+}
+
+.cbi-radio {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	cursor: pointer;
+}
+
+.cbi-radio label { display: inline-flex; align-items: center; gap: 4px; margin-right: 12px; }
+
+/* DynamicList widget (UIDynamicList): a column of removable .item chips over
+   an .add-item input row. Used for DNS servers, MAC lists, many config forms. */
+.cbi-dynlist {
+	display: inline-flex;
+	flex-direction: column;
+	width: auto;
+	min-width: 220px;
+	max-width: 400px;
+	height: auto;
+	min-height: 34px;
+	padding: 0;
+	border: none;
+	background: transparent;
+}
+
+.cbi-dynlist > .item {
+	position: relative;
+	margin-bottom: 4px;
+	padding: 6px 2em 6px 10px;
+	background: var(--background-color-high);
+	border: 1px solid var(--border-color-high);
+	border-radius: var(--radius-sm);
+	color: var(--text-color-high);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	cursor: default;
+}
+
+.cbi-dynlist > .item > span { pointer-events: none; }
+
+.cbi-dynlist > .item::after {
+	content: "×";
+	position: absolute;
+	top: -1px;
+	right: -1px;
+	bottom: -1px;
+	display: inline-flex;
+	align-items: center;
+	padding: 0 8px;
+	border: 1px solid var(--border-color-high);
+	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+	background: var(--background-color-medium);
+	color: var(--text-color-medium);
+	cursor: pointer;
+}
+
+.cbi-dynlist > .item.dragging { opacity: .5; }
+
+.cbi-dynlist > .add-item { display: flex; }
+
+.cbi-dynlist > .add-item > input,
+.cbi-dynlist > .add-item > button,
+.cbi-dynlist > .add-item > .cbi-dropdown {
+	flex: 1 1 auto;
+	width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 /* LuCI's custom multi-select dropdown widget (renders as <ul>/<li>, JS
    toggles the `open` attribute on the root element - not a CSS class). */
 .cbi-dropdown {
@@ -873,6 +954,97 @@ label[for] { cursor: pointer; }
 	width: 100%;
 	min-width: auto;
 }
+
+/* =====================================================================
+   Status widgets: progress bars, interface/zone badges (Status Overview,
+   Network, Firewall pages render these; classes come from luci-base). None
+   are in bootstrap's grid - ported from luci-theme-bootstrap markup.
+   ===================================================================== */
+
+.cbi-progressbar {
+	position: relative;
+	min-width: 170px;
+	height: 16px;
+	margin: 1.4em 0 4px;
+	border: 1px solid var(--border-color-high);
+	border-radius: 99px;
+	background: var(--background-color-medium);
+	overflow: hidden;
+}
+
+.cbi-progressbar > div {
+	height: 100%;
+	width: 0;
+	background: linear-gradient(90deg, var(--primary-color-high), var(--primary-color-medium));
+	transition: width .25s ease-in;
+}
+
+.cbi-progressbar::before {
+	position: absolute;
+	top: 50%;
+	left: 0;
+	right: 0;
+	transform: translateY(-50%);
+	content: attr(title);
+	text-align: center;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text-color-high);
+	white-space: pre;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.ifacebadge {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 8px;
+	border: 1px solid var(--border-color-high);
+	border-radius: var(--radius-sm);
+	background: var(--background-color-medium);
+	color: var(--text-color-high);
+}
+
+.ifacebadge img { width: 24px; height: 24px; vertical-align: middle; }
+
+.ifacebadge-active { border-color: var(--primary-color-high); font-weight: 600; }
+
+.network-status-table { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.network-status-table .ifacebox { margin: 0; flex-grow: 1; }
+
+.ifacebox {
+	border: 1px solid var(--border-color-medium);
+	border-radius: var(--radius-sm);
+	text-align: center;
+	white-space: nowrap;
+	background: var(--surface);
+	overflow: hidden;
+}
+
+.ifacebox .ifacebox-head {
+	padding: 6px;
+	border-bottom: 1px solid var(--border-color-medium);
+	background: var(--background-color-medium);
+	color: var(--text-color-high);
+}
+
+.ifacebox .ifacebox-head.active { background: var(--primary-color-high); color: var(--on-primary-color); }
+
+.ifacebox .ifacebox-body { padding: 8px; }
+
+.zonebadge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 3px 8px;
+	border: 1px solid var(--border-color-high);
+	border-radius: var(--radius-sm);
+	color: var(--text-color-high);
+}
+
+.zonebadge-empty { border-style: dashed; color: var(--text-color-medium); }
 
 /* =====================================================================
    Page actions bar (Save / Reset / Save & Apply)

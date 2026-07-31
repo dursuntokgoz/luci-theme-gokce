@@ -1,9 +1,14 @@
 {#
- Copyright 2026 Dursun Tokgoz
- Licensed to the public under the Apache License 2.0.
+ Copyright 2026 Dursun Tokgöz - https://www.dursuntokgoz.com.tr/
+ Licensed under the Gökçe Theme License v1.0 (see LICENSE at the repo root).
 
  Structurally based on themes/luci-theme-bootstrap/ucode/template/themes/bootstrap/footer.ut
- (LuCI project, Apache-2.0).
+ (LuCI project, Apache-2.0; see NOTICE).
+
+ ATTRIBUTION NOTICE: the "Gökçe Theme by Dursun Tokgöz" credit and its links
+ in the footer below are REQUIRED by the license. Removing, hiding, or
+ altering them terminates your rights to use this software. You may add your
+ own credit alongside it, but not replace it. Use this project only as a fork.
 -#}
 
 		{% if (!blank_page): %}
@@ -23,6 +28,7 @@
 					/ {{ _('Lua compatibility mode active') }}
 				{% endif %}
 				/ <a href="https://github.com/dursuntokgoz/luci-theme-gokce" target="_blank" rel="noreferrer">Gökçe Theme</a>
+				by <a href="https://www.dursuntokgoz.com.tr/" target="_blank" rel="noreferrer">Dursun Tokgöz</a>
 			</span>
 			<ul class="breadcrumb" id="modemenu" style="display:none"></ul>
 		</footer>

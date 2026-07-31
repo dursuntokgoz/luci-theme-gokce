@@ -108,6 +108,16 @@ luci-theme-gokce/
 
 ## License
 
-Apache-2.0, see [LICENSE](LICENSE). Portions of the ucode templates and
-CSS selector structure are adapted from `luci-theme-bootstrap`
-(Copyright the LuCI Team, Apache-2.0).
+**Gökçe Theme License v1.0** — a source-available (not OSI open-source)
+license; see [LICENSE](LICENSE). In short:
+
+- You may use and run the theme freely, on any number of devices.
+- You may redistribute it **only as a fork** of this repository — not
+  re-uploaded as a new, unrelated project.
+- The footer credit **"Gökçe Theme by Dursun Tokgöz"** and its links must
+  stay visible and functional. Removing, hiding, or re-pointing it ends your
+  right to use the software. You may add your own credit alongside it.
+
+Portions of the ucode templates, the login view JS, and the CSS selector
+structure are derived from `luci-theme-bootstrap` (Copyright the LuCI Team)
+and remain under **Apache-2.0**; see [NOTICE](NOTICE).

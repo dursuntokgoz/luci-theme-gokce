@@ -1,7 +1,7 @@
 {#
  Copyright 2022 Jo-Philipp Wich <jo@mein.io>
- Copyright 2026 Dursun Tokgoz
- Licensed to the public under the Apache License 2.0.
+ Copyright 2026 Dursun Tokgöz
+ This file is substantially the upstream work and stays under Apache-2.0.
 
  Structure from themes/luci-theme-bootstrap/ucode/template/themes/bootstrap/sysauth.ut
  (LuCI project, Apache-2.0). The login form is theme-agnostic CBI markup styled

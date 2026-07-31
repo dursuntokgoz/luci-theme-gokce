@@ -1,0 +1,22 @@
+luci-theme-gokce
+Copyright (c) 2026 Dursun Tokgöz
+
+This product includes software developed by the LuCI project.
+
+Portions of the ucode templates (header/footer/sysauth), the login view
+JavaScript, and the CBI/form/table/modal CSS selector structure are derived
+from luci-theme-bootstrap:
+
+    Copyright the LuCI Team
+    Licensed under the Apache License, Version 2.0
+    https://github.com/openwrt/luci
+
+You may obtain a copy of the Apache License, Version 2.0 at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Those derived portions remain licensed under the Apache License, Version 2.0.
+The project as a whole, and the original contributions of Dursun Tokgöz, are
+licensed under the Gökçe Theme License v1.0 (see the LICENSE file), which
+requires that the footer attribution be preserved and that redistribution
+occur only as a fork of the original repository.
