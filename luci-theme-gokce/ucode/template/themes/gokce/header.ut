@@ -85,6 +85,10 @@
 			<symbol id="gokce-icon-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 000 18c.8 0 1.5-.7 1.5-1.5 0-.4-.2-.8-.4-1-.3-.3-.4-.6-.4-1 0-.8.7-1.5 1.5-1.5H15a6 6 0 006-6c0-3.9-4-7-9-7zm-5.5 9a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm3-4a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm5 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm3.5 4a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" fill="currentColor"/></symbol>
 			<symbol id="gokce-icon-check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2l5 5 11-11-1.5-1.5z" fill="currentColor"/></symbol>
 			<symbol id="gokce-icon-auto" viewBox="0 0 24 24"><path d="M12 3a9 9 0 000 18V3z" fill="currentColor"/><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+			<symbol id="gokce-icon-search" viewBox="0 0 24 24"><path d="M10 4a6 6 0 104.2 10.3l4.8 4.7 1.4-1.4-4.7-4.8A6 6 0 0010 4zm0 2a4 4 0 110 8 4 4 0 010-8z" fill="currentColor"/></symbol>
+			<symbol id="gokce-icon-star" viewBox="0 0 24 24"><path d="M12 4.5l2.1 4.6 5 .5-3.8 3.4 1.1 4.9L12 15.9l-4.4 2.5 1.1-4.9L4.9 9.6l5-.5L12 4.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+			<symbol id="gokce-icon-star-fill" viewBox="0 0 24 24"><path d="M12 3.6l2.5 5.4 5.9.6-4.4 4 1.3 5.8L12 16.4 6.7 19.4l1.3-5.8-4.4-4 5.9-.6L12 3.6z" fill="currentColor"/></symbol>
+			<symbol id="gokce-icon-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
 		</svg>
 
 		{% if (!blank_page): %}
@@ -101,6 +105,18 @@
 
 			<div class="overlay" id="gokce-overlay"></div>
 
+			<div class="gokce-search" id="gokce-search" hidden>
+				<div class="gokce-search__backdrop" data-search-close></div>
+				<div class="gokce-search__box" role="dialog" aria-modal="true" aria-label="{{ _('Search pages') }}">
+					<div class="gokce-search__field">
+						<svg class="icon gokce-search__icon"><use href="#gokce-icon-search"/></svg>
+						<input type="text" id="gokce-search-input" class="gokce-search__input" autocomplete="off" spellcheck="false" placeholder="{{ _('Search pages…') }}" aria-label="{{ _('Search pages') }}">
+						<kbd class="gokce-search__kbd">Esc</kbd>
+					</div>
+					<ul class="gokce-search__results" id="gokce-search-results" role="listbox"></ul>
+				</div>
+			</div>
+
 			<div class="main">
 				<header class="header">
 					<div class="header__left">
@@ -110,6 +126,13 @@
 						<h1 class="header__title">{{ striptags(dispatched?.title ? _(dispatched.title) : (boardinfo.hostname ?? 'Gökçe')) }}</h1>
 					</div>
 					<div class="header__right">
+						<button class="header__btn" id="gokce-search-toggle" type="button" aria-label="{{ _('Search pages') }}" title="{{ _('Search pages') }} (Ctrl+K)">
+							<svg class="icon"><use href="#gokce-icon-search"/></svg>
+						</button>
+						<button class="header__btn header__btn--fav" id="gokce-fav-toggle" type="button" hidden aria-pressed="false" aria-label="{{ _('Add to favorites') }}">
+							<svg class="icon header__fav-icon--off"><use href="#gokce-icon-star"/></svg>
+							<svg class="icon header__fav-icon--on"><use href="#gokce-icon-star-fill"/></svg>
+						</button>
 						<div id="indicators" class="header__indicators"></div>
 						{% if (!darkpref): %}
 						<button class="header__btn" id="gokce-theme-toggle" type="button" aria-label="{{ _('Toggle dark mode') }}">

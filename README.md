@@ -45,6 +45,12 @@ sidebar links across the dashboard (`index.html`), a config page
   - **Accent color** — 7 presets (blue, indigo, teal, green, amber, rose,
     violet), each tuned for both light and dark mode.
   - **Density** — Comfortable / Compact, tightening spacing for dense pages.
+- **Favorites** — pin any page from the header star button; pinned pages
+  surface in a *Favorites* block at the top of the sidebar (with a quick
+  unpin control), persisted per-browser via `localStorage`.
+- **Quick page search** — a command-palette (header search button or
+  `Ctrl`/`Cmd`+`K`) that filters the whole admin menu by page title and
+  breadcrumb; arrow keys + Enter to jump, Esc to close.
 - Respects `prefers-reduced-motion`; ships a `.gokce-skeleton` shimmer
   utility for loading placeholders.
 - Card-styled config sections, restyled buttons/forms/tables/tabs/alerts

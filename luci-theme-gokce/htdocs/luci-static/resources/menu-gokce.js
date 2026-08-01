@@ -66,13 +66,47 @@ function applyDensity(density) {
 	store('gokce-density', (density && density !== 'comfortable') ? density : null);
 }
 
+var FAV_KEY = 'gokce-favorites';
+
+/* Favorites are a per-browser localStorage list of { url, title }. url is the
+   full dispatch path ('admin/system/system'); split on '/' to feed L.url(). */
+function loadFavs() {
+	try { return JSON.parse(localStorage.getItem(FAV_KEY) || '[]') || []; }
+	catch (e) { return []; }
+}
+
+function saveFavs(list) {
+	try { localStorage.setItem(FAV_KEY, JSON.stringify(list)); } catch (e) {}
+}
+
+function favIcon(id) {
+	return '<svg class="icon sidebar__icon"><use href="#gokce-icon-' + id + '"/></svg>';
+}
+
+/* Identify the page currently being viewed (for the header star + active
+   highlight). Uses the live dispatch path and the rendered header title. */
+function currentPage() {
+	var dp = L.env.dispatchpath;
+	if (!dp || dp.length < 2)
+		return null;
+
+	var titleEl = document.querySelector('.header__title');
+	var title = titleEl ? titleEl.textContent.trim() : dp.join('/');
+	return { url: dp.join('/'), title: title };
+}
+
 return baseclass.extend({
 	__init__() {
 		this.initSidebarToggle();
 		this.initThemeToggle();
 		this.initAppearance();
+		this.initFavorites();
 
-		ui.menu.load().then((tree) => this.render(tree));
+		ui.menu.load().then((tree) => {
+			this.menuTree = tree;
+			this.render(tree);
+			this.initSearch(tree);
+		});
 	},
 
 	initSidebarToggle() {
@@ -222,6 +256,8 @@ return baseclass.extend({
 		let url = '';
 
 		this.renderModeMenu(tree);
+		this.renderFavorites();
+		this.syncFavToggle();
 
 		if (L.env.dispatchpath.length >= 3) {
 			for (var i = 0; i < 3 && node; i++) {
@@ -232,6 +268,228 @@ return baseclass.extend({
 			if (node)
 				this.renderTabMenu(node, url);
 		}
+	},
+
+	/* Header star: shown when we can identify the current page; reflects and
+	   toggles its membership in the favorites list. */
+	initFavorites() {
+		var self = this;
+		var btn = document.getElementById('gokce-fav-toggle');
+		if (!btn) return;
+
+		btn.addEventListener('click', function () {
+			var page = currentPage();
+			if (!page) return;
+
+			var list = loadFavs();
+			var idx = list.findIndex(function (f) { return f.url === page.url; });
+			if (idx >= 0) list.splice(idx, 1);
+			else list.push(page);
+
+			saveFavs(list);
+			self.syncFavToggle();
+			self.renderFavorites();
+		});
+	},
+
+	syncFavToggle() {
+		var btn = document.getElementById('gokce-fav-toggle');
+		if (!btn) return;
+
+		var page = currentPage();
+		if (!page) { btn.hidden = true; return; }
+
+		var isFav = loadFavs().some(function (f) { return f.url === page.url; });
+		btn.hidden = false;
+		btn.classList.toggle('is-active', isFav);
+		btn.setAttribute('aria-pressed', isFav ? 'true' : 'false');
+		btn.setAttribute('aria-label', isFav ? _('Remove from favorites') : _('Add to favorites'));
+	},
+
+	/* Renders (or removes) the pinned-favorites block at the very top of the
+	   sidebar. Called on load and whenever the list changes. */
+	renderFavorites() {
+		var container = document.querySelector('#sidebar-menu');
+		if (!container) return;
+
+		var old = container.querySelector('.sidebar__favs');
+		if (old) old.parentNode.removeChild(old);
+
+		var list = loadFavs();
+		if (!list.length) return;
+
+		var activeUrl = (L.env.dispatchpath || []).join('/');
+		var items = list.map((f) => {
+			var parts = f.url.split('/');
+			var link = E('a', {
+				'href': L.url.apply(L, parts),
+				'class': 'sidebar__item sidebar__fav' +
+					(f.url === activeUrl ? ' sidebar__item--active' : '')
+			}, [ E('span', { 'class': 'sidebar__label' }, [ f.title ]) ]);
+
+			link.insertAdjacentHTML('afterbegin', favIcon('star-fill'));
+
+			var rm = E('button', {
+				'type': 'button',
+				'class': 'sidebar__fav-remove',
+				'aria-label': _('Remove from favorites')
+			});
+			rm.innerHTML = '<svg class="icon"><use href="#gokce-icon-close"/></svg>';
+			rm.addEventListener('click', (ev) => {
+				ev.preventDefault();
+				ev.stopPropagation();
+				var cur = loadFavs().filter((x) => x.url !== f.url);
+				saveFavs(cur);
+				this.syncFavToggle();
+				this.renderFavorites();
+			});
+			link.appendChild(rm);
+			return link;
+		});
+
+		var section = E('div', { 'class': 'sidebar__favs' }, [
+			E('div', { 'class': 'sidebar__favs-title' }, [ _('Favorites') ])
+		].concat(items));
+
+		container.insertBefore(section, container.firstChild);
+	},
+
+	/* Command-palette search over the full flattened menu tree. Opens on the
+	   header search button or Ctrl/Cmd+K; filters by page title, jumps on
+	   Enter/click. Degrades to nothing if the markup is absent. */
+	initSearch(tree) {
+		var self = this;
+		var wrap = document.getElementById('gokce-search');
+		var input = document.getElementById('gokce-search-input');
+		var results = document.getElementById('gokce-search-results');
+		var toggle = document.getElementById('gokce-search-toggle');
+
+		if (!wrap || !input || !results)
+			return;
+
+		var index = this.flattenMenu(tree);
+		var active = -1;
+		var shown = [];
+
+		function open() {
+			wrap.hidden = false;
+			input.value = '';
+			render('');
+			setTimeout(function () { input.focus(); }, 0);
+		}
+
+		function close() {
+			wrap.hidden = true;
+			active = -1;
+		}
+
+		function render(q) {
+			q = (q || '').trim().toLowerCase();
+			shown = q
+				? index.filter(function (e) { return e.hay.indexOf(q) >= 0; }).slice(0, 20)
+				: index.slice(0, 20);
+			active = shown.length ? 0 : -1;
+
+			results.innerHTML = '';
+			if (!shown.length) {
+				results.appendChild(E('li', { 'class': 'gokce-search__empty' }, [ _('No matching pages') ]));
+				return;
+			}
+
+			shown.forEach(function (e, i) {
+				var li = E('li', {
+					'class': 'gokce-search__result' + (i === active ? ' is-active' : ''),
+					'role': 'option'
+				}, [
+					E('span', { 'class': 'gokce-search__result-title' }, [ e.title ]),
+					E('span', { 'class': 'gokce-search__result-path' }, [ e.crumb ])
+				]);
+				li.addEventListener('click', function () { go(e); });
+				li.addEventListener('mousemove', function () {
+					if (active === i) return;
+					active = i;
+					mark();
+				});
+				results.appendChild(li);
+			});
+		}
+
+		function mark() {
+			var kids = results.children;
+			for (var i = 0; i < kids.length; i++)
+				kids[i].classList.toggle('is-active', i === active);
+			if (active >= 0 && kids[active])
+				kids[active].scrollIntoView({ block: 'nearest' });
+		}
+
+		function go(e) {
+			close();
+			window.location = e.href;
+		}
+
+		if (toggle) toggle.addEventListener('click', open);
+
+		input.addEventListener('input', function () { render(input.value); });
+
+		input.addEventListener('keydown', function (ev) {
+			if (ev.key === 'ArrowDown') { ev.preventDefault(); if (shown.length) { active = (active + 1) % shown.length; mark(); } }
+			else if (ev.key === 'ArrowUp') { ev.preventDefault(); if (shown.length) { active = (active - 1 + shown.length) % shown.length; mark(); } }
+			else if (ev.key === 'Enter') { ev.preventDefault(); if (active >= 0 && shown[active]) go(shown[active]); }
+			else if (ev.key === 'Escape') { ev.preventDefault(); close(); }
+		});
+
+		wrap.addEventListener('click', function (ev) {
+			if (ev.target.hasAttribute('data-search-close')) close();
+		});
+
+		document.addEventListener('keydown', function (ev) {
+			if ((ev.ctrlKey || ev.metaKey) && (ev.key === 'k' || ev.key === 'K')) {
+				ev.preventDefault();
+				if (wrap.hidden) open(); else close();
+			}
+		});
+	},
+
+	/* Walk the admin menu tree into a flat, searchable list of leaf pages
+	   (nodes with no children), carrying a breadcrumb of their ancestors. */
+	flattenMenu(tree) {
+		var out = [];
+		var seen = {};
+
+		/* path carries the full dispatch path (incl. the 'admin' mode) for
+		   href/url; crumbs starts one level down so breadcrumbs read
+		   'Section › Subpage', not 'Administration › Section › Subpage'. */
+		var walk = (node, path, crumbs) => {
+			var children = ui.menu.getChildren(node);
+			if (!children.length) {
+				if (path.length < 3) return;
+				var url = path.join('/');
+				if (seen[url]) return;
+				seen[url] = true;
+				var title = _(node.title);
+				var crumb = crumbs.slice(0, -1).join(' › ');
+				out.push({
+					title: title,
+					crumb: crumb,
+					url: url,
+					href: L.url.apply(L, path),
+					hay: (title + ' ' + crumbs.join(' ')).toLowerCase()
+				});
+				return;
+			}
+			children.forEach((c) => {
+				walk(c, path.concat(c.name), crumbs.concat(_(c.title)));
+			});
+		};
+
+		ui.menu.getChildren(tree).forEach((mode) => {
+			ui.menu.getChildren(mode).forEach((section) => {
+				walk(section, [mode.name, section.name], [ _(section.title) ]);
+			});
+		});
+
+		out.sort(function (a, b) { return a.title.localeCompare(b.title); });
+		return out;
 	},
 
 	/* Unchanged from upstream menu-bootstrap.js: renders the sub-tabs of the
