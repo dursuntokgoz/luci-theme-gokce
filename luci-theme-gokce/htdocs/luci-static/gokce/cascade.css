@@ -442,6 +442,11 @@ hr { border: none; border-top: 1px solid var(--border-color-medium); margin: 18p
 
 .header__btn:hover { background: var(--background-color-medium); color: var(--text-color-high); }
 
+/* display:grid above is an author rule and would otherwise beat the UA
+   [hidden] rule - re-hide buttons carrying the attribute (e.g. the favorite
+   star before JS runs / on pages with no identifiable current page). */
+.header__btn[hidden] { display: none; }
+
 .header__theme-icon--dark { display: none; }
 :root[data-darkmode="true"] .header__theme-icon--light { display: none; }
 :root[data-darkmode="true"] .header__theme-icon--dark { display: block; }
@@ -580,8 +585,15 @@ hr { border: none; border-top: 1px solid var(--border-color-medium); margin: 18p
 }
 
 .sidebar__fav-remove .icon { width: 14px; height: 14px; }
-.sidebar__fav:hover .sidebar__fav-remove { opacity: 1; }
-.sidebar__fav-remove:hover { background: var(--background-color-medium); color: var(--danger-color-high, #e5484d); }
+.sidebar__fav:hover .sidebar__fav-remove,
+.sidebar__fav:focus-within .sidebar__fav-remove { opacity: 1; }
+.sidebar__fav-remove:hover { background: var(--background-color-medium); color: var(--error-color-high); }
+
+/* No hover on touch: keep the unpin control permanently visible so it stays
+   reachable (otherwise favorites could only be removed from the header star). */
+@media (hover: none) {
+	.sidebar__fav-remove { opacity: 1; }
+}
 
 .app--sidebar-collapsed .sidebar__favs-title,
 .app--sidebar-collapsed .sidebar__fav-remove { display: none; }
