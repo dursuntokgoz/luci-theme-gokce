@@ -19,11 +19,26 @@ left sidebar and the CBI form/table/button styling re-themed.
 |-------------|-------|
 | ![Gökçe config page](docs/screenshot-settings.png) | ![Gökçe login screen](docs/screenshot-login.png) |
 
-*Screenshots are from the standalone design demo in [`demo/`](demo/), which
-mirrors the theme's design language, menu structure and page types. Open
-`demo/index.html` in any browser to explore it without a router — the
-sidebar links across the dashboard (`index.html`), a config page
-(`settings.html`) and the login screen (`login.html`).*
+**Appearance panel & quick page search — light / dark**
+
+The appearance popover (theme mode / accent color / density), the pinned
+*Favorites* block in the sidebar, and the `Ctrl`/`Cmd`+`K` command palette,
+rendered from the theme's own `cascade.css` on a real CBI page:
+
+| Appearance panel (blue accent) | Appearance panel (violet accent, dark) |
+|--------------------------------|----------------------------------------|
+| ![Appearance panel and Favorites, light mode](docs/screenshot-appearance.png) | ![Appearance panel and Favorites, dark mode](docs/screenshot-appearance-dark.png) |
+
+| Quick page search | Quick page search (dark) |
+|-------------------|--------------------------|
+| ![Command-palette page search, light mode](docs/screenshot-search.png) | ![Command-palette page search, dark mode](docs/screenshot-search-dark.png) |
+
+*The dashboard, config and login shots come from the standalone design demo in
+[`demo/`](demo/), which mirrors the theme's design language, menu structure and
+page types — open `demo/index.html` in any browser to explore it without a
+router. The appearance/favorites/search shots are rendered directly from the
+packaged theme's `cascade.css` and header markup, so they reflect the real
+in-LuCI output.*
 
 ## Features
 
