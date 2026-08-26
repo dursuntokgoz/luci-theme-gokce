@@ -1,8 +1,11 @@
 /* =====================================================================
    RouterOS Dashboard — Arayüz etkileşimleri (Vanilla JS, bağımlılık yok)
-   - Karanlık / aydınlık tema (localStorage'da saklanır)
+   - Karanlık / aydınlık tema (localStorage'da saklanır) + Otomatik mod
+   - Görünüm paneli: tema / vurgu rengi / yoğunluk (kalıcı)
    - Sidebar aç/kapat (masaüstü: daralt, mobil: off-canvas)
-   - Sidebar açılır alt menüler (akordiyon)
+   - Sidebar açılır alt menüler (akordiyon) + iç içe 3. seviye gruplar
+   - Favoriler: başlıkta yıldızla sabitleme, sürükle-sırala
+   - Komut paleti sayfa arama (Ctrl+K)
    - Canvas ile canlı trafik grafiği (degrade dolgulu, demo verisi)
    - CPU/RAM, hız ve uptime değerlerinin simüle güncellenmesi
    ===================================================================== */
@@ -17,15 +20,147 @@
     return window.innerWidth <= MOBILE_BREAKPOINT;
   }
 
-  /* ---------------- Tema (dark / light) ---------------- */
+  /* ---------------- Yardımcılar ---------------- */
+  function store(key, val) {
+    try {
+      if (val === null || val === undefined) localStorage.removeItem(key);
+      else localStorage.setItem(key, val);
+    } catch (e) {}
+  }
+
+  function load(key) {
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  }
+
+  function prefersDark() {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+
+  /* ?theme= ekran görüntüsü parametresi: açık bir tercih gibi davranır */
+  var forcedTheme = new URLSearchParams(location.search).get("theme");
+
+  /* ---------------- Tema modu (auto / light / dark) ---------------- */
+  function currentMode() {
+    if (forcedTheme) return forcedTheme;
+    var v = load("theme");
+    return v === null ? "auto" : v;
+  }
+
+  function applyTheme(isDark, persist) {
+    root.setAttribute("data-theme", isDark ? "dark" : "light");
+    if (persist) store("theme", isDark ? "dark" : "light");
+    else store("theme", null);
+    drawChart(); // grafik renkleri CSS değişkenlerinden okunuyor
+  }
+
   var themeToggle = document.getElementById("theme-toggle");
 
   themeToggle.addEventListener("click", function () {
-    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    root.setAttribute("data-theme", next);
-    localStorage.setItem("theme", next);
-    drawChart(); // grafik renkleri CSS değişkenlerinden okunuyor, yeniden çiz
+    applyTheme(root.getAttribute("data-theme") !== "dark", true);
+    syncAppearance();
   });
+
+  // Otomatik moddayken işletim sistemi tercihi değişirse takip et
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function (e) {
+    if (currentMode() === "auto" && !forcedTheme)
+      applyTheme(e.matches, false);
+  });
+
+  /* ---------------- Vurgu rengi ve yoğunluk ---------------- */
+  function applyAccent(accent) {
+    if (accent && accent !== "blue") root.setAttribute("data-accent", accent);
+    else root.removeAttribute("data-accent");
+    store("gokce-accent", (accent && accent !== "blue") ? accent : null);
+    drawChart();
+  }
+
+  function applyDensity(density) {
+    if (density && density !== "comfortable") root.setAttribute("data-density", density);
+    else root.removeAttribute("data-density");
+    store("gokce-density", (density && density !== "comfortable") ? density : null);
+  }
+
+  /* ---------------- Görünüm paneli ---------------- */
+  var appearanceWrap = document.getElementById("appearance");
+  var appearanceToggle = document.getElementById("appearance-toggle");
+  var appearancePanel = document.getElementById("appearance-panel");
+
+  function openPanel() {
+    if (!appearancePanel) return;
+    appearancePanel.hidden = false;
+    appearanceToggle.setAttribute("aria-expanded", "true");
+    syncAppearance();
+    document.addEventListener("click", onOutsidePanel, true);
+    document.addEventListener("keydown", onPanelKey);
+  }
+
+  function closePanel() {
+    if (!appearancePanel) return;
+    appearancePanel.hidden = true;
+    appearanceToggle.setAttribute("aria-expanded", "false");
+    document.removeEventListener("click", onOutsidePanel, true);
+    document.removeEventListener("keydown", onPanelKey);
+  }
+
+  function onOutsidePanel(ev) {
+    if (appearanceWrap && !appearanceWrap.contains(ev.target)) closePanel();
+  }
+
+  function onPanelKey(ev) {
+    if (ev.key === "Escape") { closePanel(); appearanceToggle.focus(); }
+  }
+
+  if (appearanceToggle) {
+    appearanceToggle.addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      if (appearancePanel.hidden) openPanel();
+      else closePanel();
+    });
+  }
+
+  var modeSeg = document.getElementById("mode-seg");
+  if (modeSeg) modeSeg.addEventListener("click", function (ev) {
+    var btn = ev.target.closest("[data-mode]");
+    if (!btn) return;
+    var mode = btn.getAttribute("data-mode");
+    forcedTheme = null; // kullanıcı tercihi parametreyi geçersiz kılar
+    if (mode === "auto") applyTheme(prefersDark(), false);
+    else applyTheme(mode === "dark", true);
+    syncAppearance();
+  });
+
+  var accentList = document.getElementById("accent-list");
+  if (accentList) accentList.addEventListener("click", function (ev) {
+    var btn = ev.target.closest("[data-accent]");
+    if (!btn) return;
+    applyAccent(btn.getAttribute("data-accent"));
+    syncAppearance();
+  });
+
+  var densitySeg = document.getElementById("density-seg");
+  if (densitySeg) densitySeg.addEventListener("click", function (ev) {
+    var btn = ev.target.closest("[data-density]");
+    if (!btn) return;
+    applyDensity(btn.getAttribute("data-density"));
+    syncAppearance();
+  });
+
+  /* Panel kontrollerine o anki durumu yansıt (aktif işaretler) */
+  function syncAppearance() {
+    var mode = currentMode();
+    var accent = load("gokce-accent") || "blue";
+    var density = load("gokce-density") || "comfortable";
+
+    document.querySelectorAll("#mode-seg [data-mode]").forEach(function (b) {
+      b.classList.toggle("is-active", b.getAttribute("data-mode") === mode);
+    });
+    document.querySelectorAll("#accent-list [data-accent]").forEach(function (b) {
+      b.classList.toggle("is-active", b.getAttribute("data-accent") === accent);
+    });
+    document.querySelectorAll("#density-seg [data-density]").forEach(function (b) {
+      b.classList.toggle("is-active", b.getAttribute("data-density") === density);
+    });
+  }
 
   /* ---------------- Sidebar aç/kapat ---------------- */
   var sidebarToggle = document.getElementById("sidebar-toggle");
@@ -79,12 +214,27 @@
     });
   });
 
+  /* İç içe 3. seviye gruplar: chevron aç/kapat, etiket gezinme */
+  document.querySelectorAll(".sidebar__subgroup").forEach(function (sg) {
+    sg.querySelector(".sidebar__subitem--parent").addEventListener("click", function (e) {
+      if (!e.target.closest(".sidebar__subchevron")) return;
+      e.preventDefault();
+      sg.classList.toggle("sidebar__subgroup--open");
+    });
+  });
+
   /* ---------------- Aktif menü öğesi + sayfa başlığı ---------------- */
   var navLinks = document.querySelectorAll(".sidebar__item[data-page], .sidebar__subitem[data-page]");
   var pageTitle = document.getElementById("page-title");
 
   navLinks.forEach(function (link) {
     link.addEventListener("click", function (e) {
+      // Üst satırın chevron'ı yalnızca grubu açar/kapatır, gezinmez
+      if (e.target.closest(".sidebar__subchevron")) {
+        e.preventDefault();
+        return;
+      }
+
       e.preventDefault();
 
       // Tüm aktif işaretlerini temizle
@@ -102,6 +252,7 @@
       }
 
       pageTitle.textContent = link.getAttribute("data-page");
+      syncFavToggle();
 
       if (isMobile()) {
         app.classList.remove("app--sidebar-open");
@@ -118,6 +269,299 @@
       tab.classList.add("active");
     });
   });
+
+  /* =====================================================================
+     Favoriler: başlık yıldızı + sidebar'daki sabitlenmiş sayfalar
+     (temadakiyle aynı etkileşim; sürükle-sırala dahil)
+     ===================================================================== */
+  var FAV_KEY = "gokce-favorites-demo";
+  var favBtn = document.getElementById("fav-toggle");
+  var nav = document.querySelector(".sidebar__nav");
+
+  function currentPage() {
+    return {
+      url: location.pathname.split("/").pop() || "index.html",
+      title: pageTitle ? pageTitle.textContent : ""
+    };
+  }
+
+  function loadFavs() {
+    try { return JSON.parse(localStorage.getItem(FAV_KEY) || "[]") || []; }
+    catch (e) { return []; }
+  }
+
+  function saveFavs(list) {
+    try { localStorage.setItem(FAV_KEY, JSON.stringify(list)); } catch (e) {}
+  }
+
+  function commitFavOrder(section) {
+    var urls = Array.prototype.map.call(
+      section.querySelectorAll(".sidebar__fav"),
+      function (el) { return el.getAttribute("data-url"); });
+
+    var byUrl = {};
+    loadFavs().forEach(function (x) { byUrl[x.url] = x; });
+
+    saveFavs(urls.map(function (u) { return byUrl[u]; }).filter(Boolean));
+  }
+
+  function renderFavorites() {
+    var old = nav.querySelector(".sidebar__favs");
+    if (old) old.parentNode.removeChild(old);
+
+    var list = loadFavs();
+    if (!list.length) return;
+
+    var cur = currentPage();
+    var section = document.createElement("div");
+    section.className = "sidebar__favs";
+
+    var title = document.createElement("div");
+    title.className = "sidebar__favs-title";
+    title.textContent = "Favoriler";
+    section.appendChild(title);
+
+    list.forEach(function (f) {
+      var link = document.createElement("a");
+      link.href = f.url;
+      link.className = "sidebar__item sidebar__fav" +
+        (f.url === cur.url ? " sidebar__item--active" : "");
+      link.setAttribute("data-url", f.url);
+      link.draggable = true;
+
+      var icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      icon.setAttribute("class", "icon sidebar__icon");
+      icon.innerHTML = '<use href="#icon-star-fill"/>';
+      link.appendChild(icon);
+
+      var label = document.createElement("span");
+      label.className = "sidebar__label";
+      label.textContent = f.title;
+      link.appendChild(label);
+
+      var rm = document.createElement("button");
+      rm.type = "button";
+      rm.className = "sidebar__fav-remove";
+      rm.setAttribute("aria-label", "Favorilerden çıkar");
+      rm.innerHTML = '<svg class="icon"><use href="#icon-close"/></svg>';
+      rm.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        saveFavs(loadFavs().filter(function (x) { return x.url !== f.url; }));
+        syncFavToggle();
+        renderFavorites();
+      });
+      link.appendChild(rm);
+
+      link.addEventListener("dragstart", function (ev) {
+        ev.dataTransfer.setData("text/plain", f.url);
+        ev.dataTransfer.effectAllowed = "move";
+        requestAnimationFrame(function () { link.classList.add("sidebar__fav--dragging"); });
+      });
+      link.addEventListener("dragend", function () {
+        link.classList.remove("sidebar__fav--dragging");
+        commitFavOrder(section);
+      });
+
+      section.appendChild(link);
+    });
+
+    section.addEventListener("dragover", function (ev) {
+      var dragging = section.querySelector(".sidebar__fav--dragging");
+      if (!dragging) return;
+
+      ev.preventDefault();
+      ev.dataTransfer.dropEffect = "move";
+
+      var target = ev.target.closest(".sidebar__fav");
+      if (!target || target === dragging) return;
+
+      var rect = target.getBoundingClientRect();
+      var before = ev.clientY < rect.top + rect.height / 2;
+      section.insertBefore(dragging, before ? target : target.nextSibling);
+    });
+
+    nav.insertBefore(section, nav.firstChild);
+  }
+
+  function syncFavToggle() {
+    if (!favBtn) return;
+    var page = currentPage();
+    if (!page.title) { favBtn.hidden = true; return; }
+
+    var isFav = loadFavs().some(function (f) { return f.url === page.url; });
+    favBtn.hidden = false;
+    favBtn.classList.toggle("is-active", isFav);
+    favBtn.setAttribute("aria-pressed", isFav ? "true" : "false");
+    favBtn.setAttribute("aria-label", isFav ? "Favorilerden çıkar" : "Favorilere ekle");
+  }
+
+  if (favBtn) {
+    favBtn.addEventListener("click", function () {
+      var page = currentPage();
+      var list = loadFavs();
+      var idx = list.findIndex(function (f) { return f.url === page.url; });
+      if (idx >= 0) list.splice(idx, 1);
+      else list.push(page);
+
+      saveFavs(list);
+      syncFavToggle();
+      renderFavorites();
+    });
+  }
+
+  /* =====================================================================
+     Komut paleti sayfa arama (Ctrl+K / başlıktaki arama düğmesi)
+     Demo menü ağacının düz indeksi; gerçek temada ui.menu.load() gelir.
+     ===================================================================== */
+  var PAGES = [
+    { title: "Genel Bakış",            crumb: "Durum",       href: "index.html" },
+    { title: "Güvenlik Duvarı",        crumb: "Durum",       href: "#" },
+    { title: "Yönlendirmeler",         crumb: "Durum",       href: "#" },
+    { title: "Sistem Günlüğü",         crumb: "Durum",       href: "#" },
+    { title: "İşlemler",               crumb: "Durum",       href: "#" },
+    { title: "Bant Genişliği",         crumb: "Durum › Gerçek Zamanlı Grafikler", href: "#" },
+    { title: "Bağlantılar",            crumb: "Durum › Gerçek Zamanlı Grafikler", href: "#" },
+    { title: "Yük",                    crumb: "Durum › Gerçek Zamanlı Grafikler", href: "#" },
+    { title: "Sistem",                 crumb: "Sistem",      href: "#" },
+    { title: "Yönetim",                crumb: "Sistem",      href: "#" },
+    { title: "Yazılım",                crumb: "Sistem",      href: "#" },
+    { title: "Başlangıç",              crumb: "Sistem",      href: "#" },
+    { title: "Yedekleme / Yazılım Yükleme", crumb: "Sistem", href: "#" },
+    { title: "Yeniden Başlat",         crumb: "Sistem",      href: "#" },
+    { title: "Arayüzler",              crumb: "Ağ",          href: "settings.html" },
+    { title: "Kablosuz",               crumb: "Ağ",          href: "#" },
+    { title: "DHCP ve DNS",            crumb: "Ağ",          href: "#" },
+    { title: "Tanılama",               crumb: "Ağ",          href: "#" },
+    { title: "Güvenlik Duvarı",        crumb: "Ağ",          href: "#" },
+    { title: "Dinamik DNS",            crumb: "Hizmetler",   href: "#" },
+    { title: "UPnP IGD ve PCP",        crumb: "Hizmetler",   href: "#" },
+    { title: "Ağ Paylaşımları",        crumb: "Hizmetler",   href: "#" },
+    { title: "Çıkış",                  crumb: "",            href: "login.html" }
+  ];
+
+  var searchWrap = document.getElementById("gokce-search");
+  var searchInput = document.getElementById("gokce-search-input");
+  var searchResults = document.getElementById("gokce-search-results");
+  var searchToggle = document.getElementById("search-toggle");
+
+  if (searchWrap && searchInput && searchResults) {
+    var INDEX = PAGES.map(function (p) {
+      return {
+        title: p.title,
+        crumb: p.crumb,
+        href: p.href,
+        hay: (p.title + " " + p.crumb).toLowerCase()
+      };
+    });
+
+    var active = -1;
+    var shown = [];
+
+    function openSearch() {
+      searchWrap.hidden = false;
+      searchInput.value = "";
+      renderResults("");
+      setTimeout(function () { searchInput.focus(); }, 0);
+    }
+
+    function closeSearch() {
+      searchWrap.hidden = true;
+      active = -1;
+    }
+
+    function renderResults(q) {
+      q = (q || "").trim().toLowerCase();
+      shown = q
+        ? INDEX.filter(function (e) { return e.hay.indexOf(q) >= 0; }).slice(0, 20)
+        : INDEX.slice(0, 20);
+      active = shown.length ? 0 : -1;
+
+      searchResults.innerHTML = "";
+      if (!shown.length) {
+        var empty = document.createElement("li");
+        empty.className = "gokce-search__empty";
+        empty.textContent = "Eşleşen sayfa yok";
+        searchResults.appendChild(empty);
+        return;
+      }
+
+      shown.forEach(function (entry, i) {
+        var li = document.createElement("li");
+        li.className = "gokce-search__result" + (i === active ? " is-active" : "");
+        li.setAttribute("role", "option");
+
+        var t = document.createElement("span");
+        t.className = "gokce-search__result-title";
+        t.textContent = entry.title;
+
+        var c = document.createElement("span");
+        c.className = "gokce-search__result-path";
+        c.textContent = entry.crumb;
+
+        li.appendChild(t);
+        li.appendChild(c);
+
+        li.addEventListener("click", function () { goTo(entry); });
+        li.addEventListener("mousemove", function () {
+          if (active === i) return;
+          active = i;
+          markActive();
+        });
+        searchResults.appendChild(li);
+      });
+    }
+
+    function markActive() {
+      var kids = searchResults.children;
+      for (var i = 0; i < kids.length; i++)
+        kids[i].classList.toggle("is-active", i === active);
+      if (active >= 0 && kids[active])
+        kids[active].scrollIntoView({ block: "nearest" });
+    }
+
+    function goTo(entry) {
+      closeSearch();
+      if (entry.href !== "#") location.href = entry.href;
+    }
+
+    if (searchToggle) searchToggle.addEventListener("click", openSearch);
+
+    searchInput.addEventListener("input", function () {
+      renderResults(searchInput.value);
+    });
+
+    searchInput.addEventListener("keydown", function (ev) {
+      if (ev.key === "ArrowDown") { ev.preventDefault(); if (shown.length) { active = (active + 1) % shown.length; markActive(); } }
+      else if (ev.key === "ArrowUp") { ev.preventDefault(); if (shown.length) { active = (active - 1 + shown.length) % shown.length; markActive(); } }
+      else if (ev.key === "Enter") { ev.preventDefault(); if (active >= 0 && shown[active]) goTo(shown[active]); }
+      else if (ev.key === "Escape") { ev.preventDefault(); closeSearch(); }
+    });
+
+    searchWrap.addEventListener("click", function (ev) {
+      if (ev.target.hasAttribute("data-search-close")) closeSearch();
+    });
+
+    document.addEventListener("keydown", function (ev) {
+      if ((ev.ctrlKey || ev.metaKey) && (ev.key === "k" || ev.key === "K")) {
+        ev.preventDefault();
+        if (searchWrap.hidden) openSearch();
+        else closeSearch();
+      }
+    });
+
+    // Ekran görüntüsü yardımcısı: ?panel=search&q=...
+    var sp = new URLSearchParams(location.search);
+    if (sp.get("panel") === "search") {
+      openSearch();
+      var sq = sp.get("q");
+      if (sq) { searchInput.value = sq; renderResults(sq); }
+    }
+  }
+
+  // Ekran görüntüsü yardımcısı: ?panel=appearance
+  if (new URLSearchParams(location.search).get("panel") === "appearance")
+    openPanel();
 
   /* =====================================================================
      Trafik grafiği (Canvas — kütüphanesiz hafif çizim)
@@ -198,6 +642,8 @@
   }
 
   function drawChart() {
+    if (!ctx) return;
+
     var rect = canvas.getBoundingClientRect();
     var w = rect.width;
     var h = CHART_HEIGHT;
@@ -298,4 +744,16 @@
   if (uptimeEl) {
     setInterval(renderUptime, 1000); // uptime saati
   }
+
+  syncAppearance();
+  syncFavToggle();
+
+  // Ekran görüntüsü yardımcısı: ?fav=1 boş listede örnek favoriler ekler
+  if (new URLSearchParams(location.search).get("fav") === "1" && !loadFavs().length) {
+    saveFavs([
+      { url: "index.html", title: "Genel Bakış" },
+      { url: "settings.html", title: "Arayüzler" }
+    ]);
+  }
+  renderFavorites();
 })();

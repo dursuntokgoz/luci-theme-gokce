@@ -69,6 +69,35 @@
   --logo-gradient: linear-gradient(135deg, #5b8afd 0%, #3556b8 100%);
 }
 
+/* ---------------- Vurgu renkleri (html[data-accent], Görünüm paneli) ----------------
+   Mavi varsayılan; diğerleri --c-primary üçlüsünü değiştirir. Temadaki
+   data-accent ön ayarlarıyla aynı değerler. */
+:root[data-accent="indigo"] { --c-primary:#6366f1; --c-primary-dark:#4f46e5; --c-primary-soft:rgba(99,102,241,.12); }
+:root[data-accent="teal"]   { --c-primary:#0ea5a4; --c-primary-dark:#0d8f8e; --c-primary-soft:rgba(14,165,164,.12); }
+:root[data-accent="green"]  { --c-primary:#22a35e; --c-primary-dark:#1c8c50; --c-primary-soft:rgba(34,163,94,.13); }
+:root[data-accent="amber"]  { --c-primary:#f59e0b; --c-primary-dark:#d98908; --c-primary-soft:rgba(245,158,11,.14); }
+:root[data-accent="rose"]   { --c-primary:#f43f5e; --c-primary-dark:#d92e4c; --c-primary-soft:rgba(244,63,94,.13); }
+:root[data-accent="violet"] { --c-primary:#a855f7; --c-primary-dark:#9032e0; --c-primary-soft:rgba(168,85,247,.13); }
+
+:root[data-theme="dark"][data-accent="indigo"] { --c-primary:#818cf8; --c-primary-soft:rgba(129,140,248,.16); }
+:root[data-theme="dark"][data-accent="teal"]   { --c-primary:#2dd4bf; --c-primary-soft:rgba(45,212,191,.16); }
+:root[data-theme="dark"][data-accent="green"]  { --c-primary:#34c073; --c-primary-soft:rgba(52,192,115,.15); }
+:root[data-theme="dark"][data-accent="amber"]  { --c-primary:#fbbf24; --c-primary-soft:rgba(251,191,36,.15); }
+:root[data-theme="dark"][data-accent="rose"]   { --c-primary:#fb7185; --c-primary-soft:rgba(251,113,133,.15); }
+:root[data-theme="dark"][data-accent="violet"] { --c-primary:#c084fc; --c-primary-soft:rgba(192,132,252,.15); }
+
+/* Yoğunluk: kompakt mod aralık/boyut belirteçlerini sıkılaştırır */
+:root[data-density="compact"] {
+  --header-height: 52px;
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+:root[data-density="compact"] .sidebar__item { padding: 8px 12px; }
+:root[data-density="compact"] .sidebar__subitem { padding: 6px 12px 6px 44px; }
+:root[data-density="compact"] .sidebar__subitem--deep { padding: 5px 12px 5px 58px; }
+:root[data-density="compact"] .tabs a { padding: 6px 12px; }
+
 /* ---------------- Reset / Taban ---------------- */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -254,7 +283,9 @@ button { font-family: inherit; }
   transition: max-height .3s ease;
 }
 
-.sidebar__group--open > .sidebar__submenu { max-height: 260px; }
+.sidebar__group--open > .sidebar__submenu { max-height: 480px; }
+
+.sidebar__subgroup--open > .sidebar__subsubmenu { max-height: 260px; }
 
 .sidebar__subitem {
   position: relative;
@@ -308,6 +339,45 @@ button { font-family: inherit; }
 .app--sidebar-collapsed .sidebar__brand { justify-content: center; padding: 0; }
 .app--sidebar-collapsed .sidebar__item--active::before { left: -12px; }
 
+/* İç içe 3. seviye gruplar (temadaki gibi): satır linke gider,
+   sağdaki chevron alt listeyi açar */
+.sidebar__subitem--parent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 8px;
+}
+
+.sidebar__subchevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  margin-left: auto;
+  opacity: .7;
+  transition: transform var(--transition);
+}
+
+.sidebar__subgroup--open > .sidebar__subitem .sidebar__subchevron {
+  transform: rotate(180deg);
+}
+
+.sidebar__subgroup--open > .sidebar__subitem:not(.sidebar__subitem--active) {
+  color: var(--c-text);
+}
+
+.sidebar__subsubmenu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .3s ease;
+}
+
+.sidebar__subitem--deep { padding-left: 58px; font-size: 12.5px; }
+
+.sidebar__subitem--deep::before { left: 40px; }
+
+.app--sidebar-collapsed .sidebar__subchevron { display: none; }
+.app--sidebar-collapsed .sidebar__subsubmenu { display: none; max-height: 0 !important; }
+
 /* Mobil karartma katmanı */
 .overlay {
   position: fixed;
@@ -318,6 +388,161 @@ button { font-family: inherit; }
   opacity: 0;
   visibility: hidden;
   transition: opacity var(--transition), visibility var(--transition);
+}
+
+/* ---------------- Sidebar favoriler bloğu ---------------- */
+.sidebar__favs {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.sidebar__favs-title {
+  padding: 2px 12px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--c-text-muted);
+}
+
+.sidebar__fav .sidebar__icon { color: var(--c-primary); }
+
+.sidebar__fav-remove {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--c-text-muted);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity var(--transition), background var(--transition), color var(--transition);
+}
+
+.sidebar__fav-remove .icon { width: 14px; height: 14px; }
+.sidebar__fav:hover .sidebar__fav-remove,
+.sidebar__fav:focus-within .sidebar__fav-remove { opacity: 1; }
+.sidebar__fav-remove:hover { background: var(--c-surface-2); color: var(--c-danger); }
+
+@media (hover: none) {
+  .sidebar__fav-remove { opacity: 1; }
+}
+
+/* Sürükle-sırala geri bildirimi */
+.sidebar__fav--dragging { opacity: .45; }
+
+.app--sidebar-collapsed .sidebar__favs-title,
+.app--sidebar-collapsed .sidebar__fav-remove { display: none; }
+
+/* ---------------- Komut paleti arama (Ctrl+K) ---------------- */
+.gokce-search {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12vh 16px 16px;
+}
+
+.gokce-search[hidden] { display: none; }
+
+.gokce-search__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(9, 14, 26, .55);
+  backdrop-filter: blur(2px);
+}
+
+.gokce-search__box {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lift);
+  overflow: hidden;
+}
+
+.gokce-search__field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.gokce-search__icon { width: 20px; height: 20px; flex-shrink: 0; color: var(--c-text-muted); }
+
+.gokce-search__input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--c-text);
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+}
+
+.gokce-search__kbd {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  background: var(--c-surface-2);
+  color: var(--c-text-muted);
+  font-size: 11px;
+  font-family: inherit;
+}
+
+.gokce-search__results {
+  max-height: 52vh;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.gokce-search__result {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.gokce-search__result.is-active { background: var(--c-surface-2); }
+
+.gokce-search__result-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--c-text);
+  white-space: nowrap;
+}
+
+.gokce-search__result-path {
+  flex: 1;
+  font-size: 12px;
+  color: var(--c-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.gokce-search__empty {
+  padding: 20px 12px;
+  text-align: center;
+  color: var(--c-text-muted);
+  font-size: 13px;
 }
 
 /* =====================================================================
@@ -379,6 +604,106 @@ button { font-family: inherit; }
 .header__theme-icon--dark { display: none; }
 :root[data-theme="dark"] .header__theme-icon--light { display: none; }
 :root[data-theme="dark"] .header__theme-icon--dark { display: block; }
+
+/* display:grid kuralı UA [hidden] kuralını ezer; gizli butonlar gerçekten
+   gizlensin (favori yıldızı JS çalışmadan önce) */
+.header__btn[hidden] { display: none; }
+
+/* Favori (sabitleme) düğmesi */
+.header__btn--fav .header__fav-icon--on { display: none; }
+.header__btn--fav.is-active { color: var(--c-primary); }
+.header__btn--fav.is-active .header__fav-icon--off { display: none; }
+.header__btn--fav.is-active .header__fav-icon--on { display: block; }
+
+/* ---------------- Görünüm paneli (tema / vurgu / yoğunluk) ---------------- */
+.appearance { position: relative; }
+
+.appearance__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 200;
+  width: 260px;
+  padding: 16px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lift);
+}
+
+.appearance__panel[hidden] { display: none; }
+
+.appearance__group + .appearance__group { margin-top: 16px; }
+
+.appearance__label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--c-text-muted);
+}
+
+.appearance__seg {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--c-surface-2);
+  border-radius: var(--radius-sm);
+}
+
+.appearance__seg-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 6px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--c-text-muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.appearance__seg-btn .icon { width: 15px; height: 15px; }
+.appearance__seg-btn:hover { color: var(--c-text); }
+
+.appearance__seg-btn.is-active {
+  background: var(--c-surface);
+  color: var(--c-primary);
+  box-shadow: var(--shadow);
+}
+
+.appearance__accents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.appearance__accent {
+  width: 30px;
+  height: 30px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: var(--dot);
+  color: #fff;
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.appearance__accent .icon { width: 16px; height: 16px; opacity: 0; transition: opacity var(--transition); }
+.appearance__accent:hover { transform: scale(1.1); }
+.appearance__accent.is-active { box-shadow: 0 0 0 2px var(--c-surface), 0 0 0 4px var(--dot); }
+.appearance__accent.is-active .icon { opacity: 1; }
 
 /* Arama kutusu */
 .search {
