@@ -46,7 +46,9 @@ in-LuCI output.*
   built from LuCI's real dynamic admin menu tree - no hardcoded app list.
   Top-level sections expand as accordion groups showing their second-level
   pages (Network → Interfaces / Wireless / ...); one group open at a time,
-  the section being viewed starts expanded.
+  the section being viewed starts expanded. Pages that own a third level
+  (e.g. Status → Realtime Graphs) get an inline expandable nested group
+  instead of a separate horizontal tab bar.
 - Three registered theme entries in *System → System → Language and Style*:
   **Gokce** (follows the browser's OS-level dark/light preference),
   **GokceDark**, **GokceLight** (force one mode).
@@ -62,7 +64,8 @@ in-LuCI output.*
   - **Density** — Comfortable / Compact, tightening spacing for dense pages.
 - **Favorites** — pin any page from the header star button; pinned pages
   surface in a *Favorites* block at the top of the sidebar (with a quick
-  unpin control), persisted per-browser via `localStorage`.
+  unpin control), persisted per-browser via `localStorage`. Drag to
+  reorder them.
 - **Quick page search** — a command-palette (header search button or
   `Ctrl`/`Cmd`+`K`) that filters the whole admin menu by page title and
   breadcrumb; arrow keys + Enter to jump, Esc to close.
@@ -129,12 +132,13 @@ luci-theme-gokce/
 
 ## Known limitations
 
-- The sidebar shows two menu levels (sections + their pages); third-level
-  navigation (e.g. tabs within a page) stays as a horizontal tab bar at the
-  top of the content area, same depth as bootstrap's dropdown nav.
-- The sidebar icon set only covers the well-known top-level sections
-  (`status`, `system`, `network`, `services`, `vpn`, `firewall`); any other
-  installed `luci-app-*` gets a generic dot icon.
+- The sidebar renders three menu levels (sections → pages → nested
+  sub-pages); navigation deeper than that is rare in LuCI and has no
+  dedicated UI.
+- The sidebar icon set covers the core sections plus the top-level nodes
+  registered by popular `luci-app-*` packages (Docker, NAS, torrent
+  clients, PassWall/OpenClash-style proxies, ad blockers, ...); any other
+  installed app still gets a generic dot icon.
 
 ## License
 

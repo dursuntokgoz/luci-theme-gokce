@@ -78,17 +78,26 @@ docs/                             # README screenshots: dashboard, settings, log
 ## Architecture notes
 
 - **Sidebar** is built at runtime by `menu-gokce.js` from LuCI's real dynamic
-  admin menu tree (`ui.menu.load()`), not a hardcoded list. It renders TWO
+  admin menu tree (`ui.menu.load()`), not a hardcoded list. It renders THREE
   levels: top sections become accordion groups (one open at a time, active
-  section pre-expanded) holding their second-level pages; level 3+ stays in the
-  `#tabmenu` horizontal tab bar (same depth as bootstrap's dropdown nav). Leaf
-  entries (e.g. Logout) stay plain links. `renderModeMenu`/`renderTabMenu` are
-  kept verbatim from upstream `menu-bootstrap.js`; only `renderMainMenu` was
-  replaced by `renderSidebarMenu`.
+  section pre-expanded) holding their second-level pages; a page that owns a
+  third level (upstream's `#tabmenu` tabs, e.g. Status → Realtime Graphs)
+  renders as an inline expandable nested group (`sidebar__subgroup`, chevron
+  on the row expands, label still navigates). Leaf entries (e.g. Logout) stay
+  plain links. `renderTabMenu` was REMOVED (2026-08) — `#tabmenu` element
+  stays in `header.ut` for third-party JS compat but is never populated;
+  `renderModeMenu` remains from upstream, `renderMainMenu` →
+  `renderSidebarMenu`. Opening a nested group re-measures ancestor
+  `.sidebar__submenu` max-heights (accordion clips at fixed px).
+- **Favorites drag-reorder:** `renderFavorites` marks items `draggable`,
+  live-reorders via `dragover` midpoint insertion, persists DOM order in
+  `commitFavOrder` (maps `data-url` back onto stored `{url,title}` objects).
+  HTML5 DnD only — touch keeps insertion order.
 - **Icons** are inline SVG symbols in `header.ut` (no FontAwesome/CDN — must
   work offline on the router). Sidebar icons are looked up by top-level menu
-  node name (`status/system/network/services/vpn/firewall`), generic dot icon
-  otherwise.
+  node name; the map covers core sections PLUS popular luci-app top-level
+  nodes (docker/nas/ttyd/transmission/passwall/openclash/adblock/sqm/...),
+  generic dot icon otherwise.
 - **Dark mode:** `header.ut` sets `data-darkmode` on `<html>` before CSS loads
   (no FOUC). `Gokce`/Auto reads OS pref + a `localStorage` override toggled by
   the header sun/moon button; `GokceDark`/`GokceLight` force it. `cascade.css`
@@ -146,6 +155,11 @@ docs/                             # README screenshots: dashboard, settings, log
 - All 6 CI build combos are GREEN on `main`. The theme is feature-complete
   for a first real release: sidebar+accordion, 3 themes + header toggle,
   full CBI restyle, working login/modal, ARM/x86 builds.
+- 2026-08 (uncommitted at first): level-3 nav moved into the sidebar as
+  nested groups (renderTabMenu deleted), favorites drag-reorder, icon map
+  extended to popular luci-app sections; demo synced (appearance panel,
+  favorites, Ctrl+K palette, nested group) and all README screenshots
+  regenerated from it.
 - **NOT yet done: live test on a real OpenWrt 25.12 device/VM.** All CSS for
   CBI pages, the `.cbi-dropdown` widget, div-tables, and the login modal was
   written against upstream's selector structure and verified only via static
@@ -154,10 +168,14 @@ docs/                             # README screenshots: dashboard, settings, log
 - **Then: cut `v1.1.0`** (sidebar accordion + login fix + modal support) once
   the live test passes. Replace the demo-based README screenshots with real
   in-LuCI ones if desired.
-- Possible later work: nested sidebar for level-3 nav; richer icon set;
-  submitting upstream to the `openwrt/luci` `themes/` tree.
+- Possible later work: submitting upstream to the `openwrt/luci` `themes/`
+  tree.
 
 ## Known limitations
 
-- Sidebar shows 2 menu levels; level-3 nav stays as a horizontal tab bar.
-- Icon set only covers well-known sections; other `luci-app-*` get a dot.
+- Sidebar renders 3 menu levels (sections → pages → nested sub-pages);
+  anything deeper has no dedicated UI (rare in LuCI).
+- Icon set covers core sections + popular luci-app top-level nodes; other
+  apps still get a generic dot icon.
+- Favorites drag-reorder is HTML5 DnD — no reorder on touch devices
+  (pin/unpin still works there).
