@@ -4,14 +4,55 @@
 
 /* Top-level admin menu entries are dynamic (any installed luci-app-* package
  * can contribute one), so this is a best-effort icon lookup by menu node
- * name with a generic fallback - not an exhaustive registry. */
+ * name with a generic fallback - not an exhaustive registry. Covers the core
+ * sections plus the top-level nodes registered by popular luci-app-* packages
+ * (docker, nas, torrent clients, proxies, ad blockers, ...). */
 var ICONS = {
 	status: 'dashboard',
 	system: 'settings',
 	network: 'globe',
 	services: 'layers',
 	vpn: 'shield',
-	firewall: 'shield'
+	firewall: 'shield',
+	wireless: 'wifi',
+	modem: 'signal',
+	nas: 'drive',
+	storage: 'drive',
+	diskman: 'drive',
+	docker: 'container',
+	container: 'container',
+	ttyd: 'terminal',
+	terminal: 'terminal',
+	statistics: 'chart',
+	netdata: 'chart',
+	nlbwmon: 'chart',
+	graphs: 'chart',
+	transmission: 'download',
+	qbittorrent: 'download',
+	aria2: 'download',
+	passwall: 'route',
+	passwall2: 'route',
+	openclash: 'route',
+	ssrplus: 'route',
+	nikki: 'route',
+	mihomo: 'route',
+	shadowsocks: 'route',
+	v2ray: 'route',
+	xray: 'route',
+	mwan3: 'route',
+	led: 'bulb',
+	light: 'bulb',
+	homeassistant: 'home',
+	hass: 'home',
+	iot: 'home',
+	alist: 'cloud',
+	syncthing: 'cloud',
+	logs: 'filetext',
+	adblock: 'block',
+	banip: 'block',
+	privoxy: 'block',
+	sqm: 'gauge',
+	qos: 'gauge'
 };
 
 function iconHtml(name) {
@@ -252,22 +293,9 @@ return baseclass.extend({
 	},
 
 	render(tree) {
-		let node = tree;
-		let url = '';
-
 		this.renderModeMenu(tree);
 		this.renderFavorites();
 		this.syncFavToggle();
-
-		if (L.env.dispatchpath.length >= 3) {
-			for (var i = 0; i < 3 && node; i++) {
-				node = node.children[L.env.dispatchpath[i]];
-				url = url + (url ? '/' : '') + L.env.dispatchpath[i];
-			}
-
-			if (node)
-				this.renderTabMenu(node, url);
-		}
 	},
 
 	/* Header star: shown when we can identify the current page; reflects and
@@ -307,7 +335,9 @@ return baseclass.extend({
 	},
 
 	/* Renders (or removes) the pinned-favorites block at the very top of the
-	   sidebar. Called on load and whenever the list changes. */
+	   sidebar. Called on load and whenever the list changes. Items can be
+	   reordered by dragging (HTML5 DnD; touch users keep header-star/remove
+	   controls instead - order there stays insertion order). */
 	renderFavorites() {
 		var container = document.querySelector('#sidebar-menu');
 		if (!container) return;
@@ -323,6 +353,7 @@ return baseclass.extend({
 			var parts = f.url.split('/');
 			var link = E('a', {
 				'href': L.url.apply(L, parts),
+				'data-url': f.url,
 				'class': 'sidebar__item sidebar__fav' +
 					(f.url === activeUrl ? ' sidebar__item--active' : '')
 			}, [ E('span', { 'class': 'sidebar__label' }, [ f.title ]) ]);
@@ -344,6 +375,17 @@ return baseclass.extend({
 				this.renderFavorites();
 			});
 			link.appendChild(rm);
+
+			link.addEventListener('dragstart', (ev) => {
+				ev.dataTransfer.setData('text/plain', f.url);
+				ev.dataTransfer.effectAllowed = 'move';
+				requestAnimationFrame(() => link.classList.add('sidebar__fav--dragging'));
+			});
+			link.addEventListener('dragend', () => {
+				link.classList.remove('sidebar__fav--dragging');
+				this.commitFavOrder(container);
+			});
+
 			return link;
 		});
 
@@ -351,7 +393,40 @@ return baseclass.extend({
 			E('div', { 'class': 'sidebar__favs-title' }, [ _('Favorites') ])
 		].concat(items));
 
+		/* Live preview while hovering over another favorite: pull the dragged
+		   row above/below the midpoint of the hovered one. */
+		section.addEventListener('dragover', (ev) => {
+			var dragging = section.querySelector('.sidebar__fav--dragging');
+			if (!dragging) return;
+
+			ev.preventDefault();
+			ev.dataTransfer.dropEffect = 'move';
+
+			var target = ev.target.closest('.sidebar__fav');
+			if (!target || target === dragging) return;
+
+			var rect = target.getBoundingClientRect();
+			var before = ev.clientY < rect.top + rect.height / 2;
+			section.insertBefore(dragging, before ? target : target.nextSibling);
+		});
+
 		container.insertBefore(section, container.firstChild);
+	},
+
+	/* Persist the current visual order of the favorites block back to
+	   localStorage, preserving each entry's stored title/url objects. */
+	commitFavOrder(container) {
+		var section = container.querySelector('.sidebar__favs');
+		if (!section) return;
+
+		var urls = Array.prototype.map.call(
+			section.querySelectorAll('.sidebar__fav'),
+			(el) => el.getAttribute('data-url'));
+
+		var byUrl = {};
+		loadFavs().forEach((x) => { byUrl[x.url] = x; });
+
+		saveFavs(urls.map((u) => byUrl[u]).filter(Boolean));
 	},
 
 	/* Command-palette search over the full flattened menu tree. Opens on the
@@ -492,49 +567,17 @@ return baseclass.extend({
 		return out;
 	},
 
-	/* Unchanged from upstream menu-bootstrap.js: renders the sub-tabs of the
-	 * currently active top-level section into #tabmenu, at the top of the
-	 * content area. */
-	renderTabMenu(tree, url, level) {
-		const container = document.querySelector('#tabmenu');
-		const ul = E('ul', { 'class': 'tabs' });
-		const children = ui.menu.getChildren(tree);
-		let activeNode = null;
-
-		children.forEach(child => {
-			const isActive = (L.env.dispatchpath[3 + (level || 0)] == child.name);
-			const activeClass = isActive ? ' active' : '';
-			const className = 'tabmenu-item-%s %s'.format(child.name, activeClass);
-
-			ul.appendChild(E('li', { 'class': className }, [
-				E('a', { 'href': L.url(url, child.name) }, [ _(child.title) ] )]));
-
-			if (isActive)
-				activeNode = child;
-		});
-
-		if (ul.children.length == 0)
-			return E([]);
-
-		container.appendChild(ul);
-		container.style.display = '';
-
-		if (activeNode)
-			this.renderTabMenu(activeNode, url + '/' + activeNode.name, (level || 0) + 1);
-
-		return ul;
-	},
-
 	/* Replaces upstream's renderMainMenu(): instead of a horizontal top-nav
-	 * with dropdowns, renders the same two menu levels as a vertical sidebar -
-	 * top-level sections become accordion groups holding their second-level
-	 * pages. Levels three and up stay in #tabmenu (see above), matching how
-	 * far bootstrap's dropdown nav descends. */
+	 * with dropdowns, renders the same menu as a vertical sidebar: top-level
+	 * sections become accordion groups holding their second-level pages, and
+	 * pages that own a third level (upstream: the #tabmenu tab bar) get an
+	 * inline expandable nested group instead. */
 	renderSidebarMenu(tree, url) {
 		const container = document.querySelector('#sidebar-menu');
 		const children = ui.menu.getChildren(tree);
 		const activeName = L.env.dispatchpath[1];
 		const activeSub = L.env.dispatchpath[2];
+		const activeSubSub = L.env.dispatchpath[3];
 
 		if (!container)
 			return;
@@ -543,6 +586,23 @@ return baseclass.extend({
 			const submenu = group.querySelector('.sidebar__submenu');
 			group.classList.toggle('sidebar__group--open', open);
 			submenu.style.maxHeight = open ? submenu.scrollHeight + 'px' : '';
+		};
+
+		const setSubOpen = (subgroup, open) => {
+			const inner = subgroup.querySelector('.sidebar__subsubmenu');
+
+			subgroup.classList.toggle('sidebar__subgroup--open', open);
+			inner.style.maxHeight = open ? inner.scrollHeight + 'px' : '';
+
+			/* The outer accordion clips at a fixed max-height; growing an
+			 * inner list must re-measure every ancestor so nothing is cut
+			 * off. */
+			let anc = subgroup.parentElement;
+			while (anc && anc !== container) {
+				if (anc.classList.contains('sidebar__submenu'))
+					anc.style.maxHeight = anc.scrollHeight + 'px';
+				anc = anc.parentElement;
+			}
 		};
 
 		children.forEach(child => {
@@ -571,11 +631,54 @@ return baseclass.extend({
 				'<svg class="icon sidebar__chevron"><use href="#gokce-icon-chevron"/></svg>');
 
 			const submenu = E('div', { 'class': 'sidebar__submenu' },
-				sub.map(s => E('a', {
-					'href': L.url(url, child.name, s.name),
-					'class': 'sidebar__subitem' +
-						((isActive && activeSub === s.name) ? ' sidebar__subitem--active' : '')
-				}, [ _(s.title) ])));
+				sub.map(s => {
+					const subs = ui.menu.getChildren(s);
+					const isSubActive = isActive && activeSub === s.name;
+
+					/* Third-level pages render inside an expandable nested
+					 * group (upstream put them in the #tabmenu bar): the row
+					 * navigates to the parent page, the chevron expands the
+					 * child list. */
+					if (subs.length) {
+						const link = E('a', {
+							'href': L.url(url, child.name, s.name),
+							'class': 'sidebar__subitem sidebar__subitem--parent' +
+								((isSubActive && activeSubSub === undefined) ? ' sidebar__subitem--active' : '')
+						}, [ E('span', { 'class': 'sidebar__label' }, [ _(s.title) ]) ]);
+
+						link.insertAdjacentHTML('beforeend',
+							'<svg class="icon sidebar__subchevron"><use href="#gokce-icon-chevron"/></svg>');
+
+						const inner = E('div', { 'class': 'sidebar__subsubmenu' },
+							subs.map(k => E('a', {
+								'href': L.url(url, child.name, s.name, k.name),
+								'class': 'sidebar__subitem sidebar__subitem--deep' +
+									((isSubActive && activeSubSub === k.name) ? ' sidebar__subitem--active' : '')
+							}, [ _(k.title) ])));
+
+						const subgroup = E('div', { 'class': 'sidebar__subgroup' }, [ link, inner ]);
+
+						link.addEventListener('click', (ev) => {
+							if (!ev.target.closest('.sidebar__subchevron'))
+								return;
+
+							ev.preventDefault();
+							setSubOpen(subgroup, !subgroup.classList.contains('sidebar__subgroup--open'));
+						});
+
+						/* Viewing any third-level page pre-expands its group */
+						if (isSubActive && activeSubSub !== undefined)
+							requestAnimationFrame(() => setSubOpen(subgroup, true));
+
+						return subgroup;
+					}
+
+					return E('a', {
+						'href': L.url(url, child.name, s.name),
+						'class': 'sidebar__subitem' +
+							(isSubActive ? ' sidebar__subitem--active' : '')
+					}, [ _(s.title) ]);
+				}));
 
 			const group = E('div', { 'class': 'sidebar__group' }, [ toggle, submenu ]);
 

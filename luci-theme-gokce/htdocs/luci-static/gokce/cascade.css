@@ -376,6 +376,56 @@ hr { border: none; border-top: 1px solid var(--border-color-medium); margin: 18p
 
 .sidebar__subitem--active::before { opacity: 1; }
 
+/* Nested third-level groups (upstream #tabmenu pages): the parent row keeps
+   its dot + label and gains a chevron on the right; clicking the chevron
+   expands the child list below it. */
+.sidebar__subitem--parent {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding-right: 8px;
+}
+
+.sidebar__subitem--parent .sidebar__label {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sidebar__subchevron {
+	width: 14px;
+	height: 14px;
+	flex-shrink: 0;
+	margin-left: auto;
+	opacity: .7;
+	transition: transform var(--transition);
+}
+
+.sidebar__subgroup--open > .sidebar__subitem .sidebar__subchevron {
+	transform: rotate(180deg);
+}
+
+.sidebar__subgroup--open > .sidebar__subitem:not(.sidebar__subitem--active) {
+	color: var(--text-color-high);
+}
+
+.sidebar__subsubmenu {
+	max-height: 0;
+	overflow: hidden;
+	transition: max-height .3s ease;
+}
+
+.sidebar__subitem--deep {
+	padding-left: 58px;
+	font-size: 12.5px;
+}
+
+.sidebar__subitem--deep::before { left: 40px; }
+
+.app--sidebar-collapsed .sidebar__subchevron,
+.app--sidebar-collapsed .sidebar__subsubmenu { display: none; }
+.app--sidebar-collapsed .sidebar__subsubmenu { max-height: 0 !important; }
+
 .app--sidebar-collapsed .sidebar__brand-text,
 .app--sidebar-collapsed .sidebar__chevron,
 .app--sidebar-collapsed .sidebar__label { display: none; }
@@ -597,6 +647,9 @@ hr { border: none; border-top: 1px solid var(--border-color-medium); margin: 18p
 
 .app--sidebar-collapsed .sidebar__favs-title,
 .app--sidebar-collapsed .sidebar__fav-remove { display: none; }
+
+/* Drag-reorder feedback for favorites */
+.sidebar__fav--dragging { opacity: .45; }
 
 /* ---- Command-palette search ---- */
 .gokce-search {
@@ -1536,6 +1589,7 @@ body.modal-overlay-active #modal_overlay {
 :root[data-density="compact"] .table .td { padding: 7px 10px; }
 :root[data-density="compact"] .sidebar__item { padding: 8px 12px; }
 :root[data-density="compact"] .sidebar__subitem { padding: 6px 12px 6px 44px; }
+:root[data-density="compact"] .sidebar__subitem--deep { padding: 5px 12px 5px 58px; }
 :root[data-density="compact"] .tabs > li > a,
 :root[data-density="compact"] .cbi-tabmenu > li > a { padding: 6px 12px; }
 :root[data-density="compact"] .cbi-page-actions,
